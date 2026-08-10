@@ -1,6 +1,16 @@
 {
   "id": "level3",
-  "title": "Crystal Cave",
-  "grid": { "width": 8, "height": 6 },
-  "metadata": { "description": "Twinkling caves and tight corridors." }
+  "title": "Purple Mix",
+  "grid": { "width": 9, "height": 9 },
+  "emitters": [
+    { "x": 0, "y": 4, "dir": "right", "color": "red" },
+    { "x": 4, "y": 8, "dir": "up", "color": "blue" }
+  ],
+  "pieces": [
+    { "type": "adder", "x": 4, "y": 4, "dir": "down", "rotatable": true }
+  ],
+  "targets": [
+    { "x": 8, "y": 4, "color": "purple" }
+  ],
+  "metadata": { "description": "Combine red and blue in the adder, then aim purple at the target." }
 }

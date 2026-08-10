@@ -1,6 +1,16 @@
 {
   "id": "level2",
-  "title": "Sandy Dunes",
-  "grid": { "width": 12, "height": 10 },
-  "metadata": { "description": "Windy dunes with shifting sands." }
+  "title": "Split Beam",
+  "grid": { "width": 9, "height": 9 },
+  "emitters": [
+    { "x": 4, "y": 0, "dir": "down", "color": "blue" }
+  ],
+  "pieces": [
+    { "type": "splitter", "x": 4, "y": 4, "orientation": "vertical", "rotatable": true }
+  ],
+  "targets": [
+    { "x": 1, "y": 4, "color": "blue" },
+    { "x": 7, "y": 4, "color": "blue" }
+  ],
+  "metadata": { "description": "Rotate the splitter so the beam forks left and right." }
 }
