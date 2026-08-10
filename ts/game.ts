@@ -19,7 +19,7 @@ canvas.style.background = "#fafafa";
 if (gameScreen) gameScreen.appendChild(canvas);
 
 // Initialize systems
-const grid = new GridRendererSystem(canvas, 10, 8, 6, 8);
+const grid = new GridRendererSystem(canvas, 9, 9, 6, 8);
 world.addTickSystem(grid);
 world.addEntitySystem(grid as any);
 

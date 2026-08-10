@@ -1,6 +1,15 @@
 {
   "id": "level1",
-  "title": "Green Meadow",
-  "grid": { "width": 10, "height": 8 },
-  "metadata": { "description": "A calm introductory field." }
+  "title": "Mirror Turn",
+  "grid": { "width": 9, "height": 9 },
+  "emitters": [
+    { "x": 0, "y": 8, "dir": "right", "color": "red" }
+  ],
+  "pieces": [
+    { "type": "mirror", "x": 4, "y": 8, "orientation": "\\", "rotatable": true }
+  ],
+  "targets": [
+    { "x": 4, "y": 2, "color": "red" }
+  ],
+  "metadata": { "description": "Click the mirror to redirect the red beam upward." }
 }
