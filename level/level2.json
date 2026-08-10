@@ -1,0 +1,6 @@
+{
+  "id": "level2",
+  "title": "Sandy Dunes",
+  "grid": { "width": 12, "height": 10 },
+  "metadata": { "description": "Windy dunes with shifting sands." }
+}

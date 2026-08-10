@@ -1,0 +1,6 @@
+{
+  "id": "level3",
+  "title": "Crystal Cave",
+  "grid": { "width": 8, "height": 6 },
+  "metadata": { "description": "Twinkling caves and tight corridors." }
+}

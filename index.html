@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Game Template</title>
+  <link rel="stylesheet" href="./css/index.css" />
+  <script src="./ts/game.ts" defer></script>
+</head>
+
+<body>
+  <header>
+    <div class="box">
+      <h1 class="g-title">My game</h1>
+      <p class="g-description">description</p>
+    </div>
+    <div class="box highscore-box">
+      <a href="https://stardance.hackclub.com/projects/*" class="btn-bold btn-basic small">View Stardance</a>
+    </div>
+  </header>
+  <section id="title-screen" class="screen space">
+    <div class="placeholder">
+      <img src="https://picsum.photos/200" alt="">
+    </div>
+    <div class="button-box">
+      <button class="btn-bold btn-secondary large" id="g-btn-start">
+        Start Game
+      </button>
+      <a class="btn-bold btn-basic large" href="https://stardance.hackclub.com/projects/*">
+        View Stardance
+      </a>
+    </div>
+
+  </section>
+  <section id="level-screen" class="hidden screen">
+
+  </section>
+  <main id="game-screen" class="hidden screen">
+    <h1>Game Template</h1>
+    <p id="status">Loading game...</p>
+  </main>
+  <footer>© Jonas Gaden / 2026</footer>
+</body>
+
+</html>

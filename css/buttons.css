@@ -1,0 +1,93 @@
+button:not(.btn-bold) {
+    padding: calc(.75rem + 2px) 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: .75rem;
+    pointer-events: stroke;
+
+    background-color: transparent;
+    border: 2px solid #4b4b4b;
+    color: #4b4b4b;
+    transform: translateY(2px);
+}
+
+.btn-bold.btn-basic {
+    --variant-color: black;
+    --variant-background: white;
+
+    --variant-border: rgb(123, 123, 123);
+
+}
+
+.btn-primary {
+    --variant-color: #fff;
+    --variant-background: #007bff;
+}
+
+.btn-secondary {
+    --variant-color: #fff;
+    --variant-background: #59cc62;
+}
+
+.btn-tertiary {
+    --variant-color: #fff;
+    --variant-background: #f0ad4e;
+}
+
+.btn-danger {
+    --variant-color: #fff;
+    --variant-background: #dc3545;
+}
+
+.btn-bold {
+    --variant-border: color-mix(in srgb, var(--variant-background) 80%, #202020 20%);
+
+    border-radius: .5rem;
+    padding: .75rem 1rem;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: .75rem;
+    transition: 100ms ease-in-out;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+
+
+    margin-bottom: .1rem;
+
+    border: 2px solid var(--variant-border);
+    color: var(--variant-color);
+    background-color: var(--variant-background);
+    border-bottom: .4rem solid var(--variant-border);
+}
+
+.btn-bold:hover {
+    border-bottom: .4rem solid var(--variant-border);
+    transform: translateY(-0.1rem);
+}
+
+.btn-bold:active {
+    border-bottom: .2rem solid var(--variant-border);
+    background-color: color-mix(in srgb, var(--variant-background) 80%, black 4%);
+
+    transform: translateY(.2rem);
+    margin-bottom: .3rem;
+
+}
+
+.btn-bold.large {
+    padding: 1rem 1rem;
+}
+
+/* UTILS */
+button.shadow {
+    box-shadow: 0 0 0;
+}
+
+.button-box {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    width: 100%;
+}
