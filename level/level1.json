@@ -3,10 +3,10 @@
   "title": "Mirror Turn",
   "grid": { "width": 9, "height": 9 },
   "emitters": [
-    { "x": 0, "y": 8, "dir": "right", "color": "red" }
+    { "x": 0, "y": 5, "dir": "right", "color": "red" }
   ],
   "pieces": [
-    { "type": "mirror", "x": 4, "y": 8, "orientation": "\\", "rotatable": true }
+    { "type": "mirror", "x": 4, "y": 5, "orientation": "\\", "rotatable": true }
   ],
   "targets": [
     { "x": 4, "y": 2, "color": "red" }

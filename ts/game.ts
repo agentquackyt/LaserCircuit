@@ -12,10 +12,8 @@ const world = engine.world;
 // Create canvas inside the #game-screen element
 const gameScreen = document.querySelector("#game-screen") as HTMLElement | null;
 const canvas = document.createElement("canvas");
-canvas.style.width = "800px";
-canvas.style.height = "600px";
+canvas.className = "game-board";
 canvas.style.display = "block";
-canvas.style.background = "#fafafa";
 if (gameScreen) gameScreen.appendChild(canvas);
 
 // Initialize systems
@@ -56,6 +54,7 @@ if (startBtn) {
 				// hide level screen, show game
 				if (levelScreen) levelScreen.classList.add("hidden");
 				if (gameScreenEl) gameScreenEl.classList.remove("hidden");
+				grid.resize();
 				// dispatch ui:load-level as an entity so LevelSystem handles it
 				const e = new Entity();
 				e.addComponent(new EventComponent("ui:load-level", { levelId: item.id }));

@@ -35,7 +35,7 @@ export class InputManagerSystem extends TickSystem {
         const canvasX = ev.clientX - rect.left;
         const canvasY = ev.clientY - rect.top;
         const entity = new Entity();
-        entity.addComponent(new EventComponent("canvas:click", { rawEvent: ev, x: ev.clientX, y: ev.clientY, canvasX, canvasY }));
+        entity.addComponent(new EventComponent("canvas:click", { rawEvent: ev, x: ev.clientX, y: ev.clientY, canvasX, canvasY, button: ev.button }));
         entity.addComponent(new CanvasEventComponent(canvasX, canvasY));
         this.world.addEntity(entity);
     }

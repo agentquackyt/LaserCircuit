@@ -1,4 +1,4 @@
-export type LightColor = "red" | "blue" | "purple";
+export type LightColor = "red" | "green" | "blue" | "yellow" | "purple" | "cyan" | "white";
 export type Direction = "up" | "right" | "down" | "left";
 
 export type Emitter = { x: number; y: number; dir: Direction; color: LightColor };
@@ -28,13 +28,27 @@ export type AdderPiece = {
 	rotatable?: boolean;
 };
 
-export type LaserPiece = MirrorPiece | SplitterPiece | AdderPiece;
+export type MixerPiece = {
+	type: "mixer";
+	x: number;
+	y: number;
+	dir: Direction;
+	rotatable?: boolean;
+};
+
+export type LaserPiece = MirrorPiece | SplitterPiece | AdderPiece | MixerPiece;
+
+export type LevelRules = {
+	canPlaceOwnBlocks?: boolean;
+	blockCycle?: Array<LaserPiece | null>;
+};
 
 export type LaserLevelData = {
 	grid?: { width?: number; height?: number };
 	emitters?: Emitter[];
 	targets?: Target[];
 	pieces?: LaserPiece[];
+	rules?: LevelRules;
 };
 
 export type BeamSegment = {
@@ -53,6 +67,15 @@ export type LaserSimulationResult = {
 };
 
 const DIRECTION_ORDER: Direction[] = ["up", "right", "down", "left"];
+const COLOR_MASKS: Record<LightColor, number> = {
+	red: 1,
+	green: 2,
+	yellow: 3,
+	blue: 4,
+	purple: 5,
+	cyan: 6,
+	white: 7,
+};
 
 const DELTA_BY_DIRECTION: Record<Direction, { x: number; y: number }> = {
 	up: { x: 0, y: -1 },
@@ -71,21 +94,44 @@ function rotateDirection(dir: Direction): Direction {
 	return DIRECTION_ORDER[(DIRECTION_ORDER.indexOf(dir) + 1) % DIRECTION_ORDER.length] as Direction;
 }
 
+function oppositeDirection(dir: Direction): Direction {
+	if (dir === "up") return "down";
+	if (dir === "right") return "left";
+	if (dir === "down") return "up";
+	return "right";
+}
+
+function directionBit(dir: Direction): number {
+	if (dir === "up") return 1;
+	if (dir === "right") return 2;
+	if (dir === "down") return 4;
+	return 8;
+}
+
 function inBounds(x: number, y: number, width: number, height: number): boolean {
 	return x >= 0 && y >= 0 && x < width && y < height;
 }
 
-function mixPair(a: LightColor, b: LightColor): LightColor {
-	if (a === b) return a;
-	if (a === "purple" || b === "purple") return "purple";
-	return "purple";
+function colorToMask(color: LightColor): number {
+	return COLOR_MASKS[color] ?? 0;
+}
+
+function maskToColor(mask: number): LightColor | undefined {
+	if (mask === 1) return "red";
+	if (mask === 2) return "green";
+	if (mask === 3) return "yellow";
+	if (mask === 4) return "blue";
+	if (mask === 5) return "purple";
+	if (mask === 6) return "cyan";
+	if (mask === 7) return "white";
+	return undefined;
 }
 
 export function mixLightColors(colors: LightColor[]): LightColor | undefined {
 	if (colors.length === 0) return undefined;
-	let mixed: LightColor = colors[0] as LightColor;
-	for (let i = 1; i < colors.length; i++) mixed = mixPair(mixed, colors[i] as LightColor);
-	return mixed;
+	let mask = 0;
+	for (const color of colors) mask |= colorToMask(color);
+	return maskToColor(mask);
 }
 
 export function rotatePiece(piece: LaserPiece): LaserPiece {
@@ -94,6 +140,9 @@ export function rotatePiece(piece: LaserPiece): LaserPiece {
 	}
 	if (piece.type === "splitter") {
 		return { ...piece, orientation: piece.orientation === "horizontal" ? "vertical" : "horizontal" };
+	}
+	if (piece.type === "mixer") {
+		return { type: "splitter", x: piece.x, y: piece.y, orientation: "horizontal", rotatable: piece.rotatable };
 	}
 	return { ...piece, dir: rotateDirection(piece.dir) };
 }
@@ -124,10 +173,10 @@ export function simulateLaserLevel(
 	const pieceByCell = new Map<string, LaserPiece>();
 	for (const piece of pieces) pieceByCell.set(toCellKey(piece.x, piece.y), piece);
 
-	const adderInputs = new Map<string, LightColor[]>();
 	const stateCounts = new Map<string, number>();
 
 	type BeamState = { x: number; y: number; dir: Direction; color: LightColor };
+	type DirectionalInputs = { colors: LightColor[]; inputMask: number };
 
 	const pushCellHit = (x: number, y: number, color: LightColor) => {
 		const key = toCellKey(x, y);
@@ -136,7 +185,9 @@ export function simulateLaserLevel(
 		cellHits.set(key, current);
 	};
 
-	const trace = (initial: BeamState[], enableAdderCapture: boolean) => {
+	const trace = (initial: BeamState[]) => {
+		const splitterInputs = new Map<string, DirectionalInputs>();
+		const adderInputs = new Map<string, LightColor[]>();
 		const queue: BeamState[] = [...initial];
 		while (queue.length > 0) {
 			const beam = queue.shift()!;
@@ -164,37 +215,63 @@ export function simulateLaserLevel(
 				continue;
 			}
 
-			if (piece.type === "splitter") {
-				const directions: Direction[] = piece.orientation === "horizontal" ? ["left", "right"] : ["up", "down"];
-				for (const direction of directions) queue.push({ x: nx, y: ny, dir: direction, color: beam.color });
+			if (piece.type === "splitter" || piece.type === "mixer") {
+				const key = toCellKey(piece.x, piece.y);
+				const current = splitterInputs.get(key) ?? { colors: [], inputMask: 0 };
+				current.colors.push(beam.color);
+				current.inputMask |= directionBit(oppositeDirection(beam.dir));
+				splitterInputs.set(key, current);
 				continue;
 			}
 
 			if (piece.type === "adder") {
-				if (enableAdderCapture) {
-					const key = toCellKey(piece.x, piece.y);
-					const current = adderInputs.get(key) ?? [];
-					current.push(beam.color);
-					adderInputs.set(key, current);
+				const key = toCellKey(piece.x, piece.y);
+				const current = adderInputs.get(key) ?? [];
+				current.push(beam.color);
+				adderInputs.set(key, current);
+				continue;
+			}
+
+			continue;
+		}
+
+		return { splitterInputs, adderInputs };
+	};
+
+	let frontier: BeamState[] = emitters.map((emitter) => ({ ...emitter }));
+	const maxRounds = Math.max(16, width * height * 4);
+	for (let round = 0; round < maxRounds && frontier.length > 0; round++) {
+		const { splitterInputs, adderInputs } = trace(frontier);
+		const nextFrontier: BeamState[] = [];
+
+		for (const piece of pieces) {
+			const key = toCellKey(piece.x, piece.y);
+			if (piece.type === "splitter" || piece.type === "mixer") {
+				const input = splitterInputs.get(key);
+				if (!input || input.colors.length === 0) continue;
+				const mixed = mixLightColors(input.colors);
+				if (!mixed) continue;
+				for (const dir of DIRECTION_ORDER) {
+					if ((input.inputMask & directionBit(dir)) !== 0) continue;
+					nextFrontier.push({ x: piece.x, y: piece.y, dir, color: mixed });
 				}
 				continue;
 			}
+
+			if (piece.type === "adder") {
+				const input = adderInputs.get(key);
+				if (!input || input.length === 0) continue;
+				const mixed = mixLightColors(input);
+				if (!mixed) continue;
+				nextFrontier.push({ x: piece.x, y: piece.y, dir: piece.dir, color: mixed });
+				continue;
+			}
+
+			continue;
 		}
-	};
 
-	trace(emitters.map((emitter) => ({ ...emitter })), true);
-
-	const adderOutputs: BeamState[] = [];
-	for (const piece of pieces) {
-		if (piece.type !== "adder") continue;
-		const input = adderInputs.get(toCellKey(piece.x, piece.y));
-		if (!input || input.length === 0) continue;
-		const mixed = mixLightColors(input);
-		if (!mixed) continue;
-		adderOutputs.push({ x: piece.x, y: piece.y, dir: piece.dir, color: mixed });
+		frontier = nextFrontier;
 	}
-
-	trace(adderOutputs, false);
 
 	const targetHits = targets.map((target) => {
 		const mixed = mixLightColors(cellHits.get(toCellKey(target.x, target.y)) ?? []);

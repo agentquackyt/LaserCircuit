@@ -11,6 +11,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 1rem;
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.96), rgba(240, 242, 245, 0.94) 48%, rgba(228, 232, 238, 1) 100%);
 }
 
 header {
@@ -56,6 +57,53 @@ header {
   width: 100%;
 }
 
+#game-screen {
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+#game-screen canvas.game-board {
+  display: block;
+  width: min(92vmin, 680px);
+  height: min(92vmin, 680px);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #363c47 0%, #2b313b 100%);
+  box-shadow: 0 30px 70px rgba(18, 22, 28, 0.22);
+}
+
+#game-screen h1,
+#game-screen #status {
+  text-align: center;
+}
+
+#game-screen #status {
+  color: #3f4754;
+}
+
+#complete-level-btn {
+  align-self: center;
+}
+
+#completion-dialog {
+  border: 2px solid #4b4b4b;
+  border-radius: .75rem;
+  padding: 1.5rem;
+  color: #202020;
+  background: #fff;
+  box-shadow: 0 1rem 3rem rgba(18, 22, 28, 0.25);
+}
+
+#completion-dialog::backdrop {
+  background: rgba(18, 22, 28, 0.45);
+}
+
+#completion-dialog form {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
 
 body:not(#title-screen.hidden) .highscore-box {
   display: none;
@@ -70,5 +118,17 @@ body:not(#title-screen.hidden) .highscore-box {
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
+}
+
+dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+}
+
+.icon {
+  max-height: 60dvh;
+  border-radius: 1rem;
+  transform: skew(-4deg, 2deg);
 }

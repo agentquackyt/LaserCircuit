@@ -9,8 +9,18 @@
     { "type": "splitter", "x": 4, "y": 4, "orientation": "vertical", "rotatable": true }
   ],
   "targets": [
-    { "x": 1, "y": 4, "color": "blue" },
-    { "x": 7, "y": 4, "color": "blue" }
+    { "x": 1, "y": 5, "color": "blue" },
+    { "x": 7, "y": 1, "color": "blue" }
   ],
+  "rules": {
+    "canPlaceOwnBlocks": true,
+    "blockCycle": [
+      null,
+      { "type": "mirror", "x": 0, "y": 0, "orientation": "/", "rotatable": true },
+      { "type": "mirror", "x": 0, "y": 0, "orientation": "\\", "rotatable": true },
+      { "type": "splitter", "x": 0, "y": 0, "orientation": "horizontal", "rotatable": true }
+    ]
+  },
+
   "metadata": { "description": "Rotate the splitter so the beam forks left and right." }
 }
