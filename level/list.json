@@ -2,5 +2,6 @@
   { "id": "level1", "title": "Mirror Turn" },
   { "id": "level2", "title": "Split Beam" },
   { "id": "level3", "title": "Purple Mix" },
-  { "id": "level4", "title": "Mirror Maze" }
+  { "id": "level4", "title": "Mirror Maze" },
+  { "id": "level5", "title": "Light Maze" }
 ]

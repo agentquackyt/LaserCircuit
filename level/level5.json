@@ -1,0 +1,28 @@
+{
+  "id": "level5",
+  "title": "Purple Mix",
+  "grid": { "width": 9, "height": 9 },
+  "emitters": [
+    { "x": 0, "y": 4, "dir": "right", "color": "red" },
+    { "x": 4, "y": 8, "dir": "up", "color": "blue" },
+    { "x": 7, "y": 3, "dir": "down", "color": "green" }
+  ],
+  "pieces": [
+    { "type": "mirror", "x": 4, "y": 5, "orientation": "\\", "rotatable": true },
+    { "type": "obstacle", "x": 5, "y": 4 }
+  ],
+  "targets": [
+    { "x": 8, "y": 5, "color": "green" },
+    { "x": 5, "y": 1, "color": "blue" },
+    { "x": 8, "y": 3, "color": "red" }
+  ],
+  "rules": {
+    "canPlaceOwnBlocks": true,
+    "blockCycle": [
+      null,
+      { "type": "mirror", "x": 0, "y": 0, "orientation": "/", "rotatable": true },
+      { "type": "mirror", "x": 0, "y": 0, "orientation": "\\", "rotatable": true }
+    ]
+  },
+  "metadata": { "description": "Combine red and blue at the splitter, then aim purple at the target. Left click cycles blocks while editing is enabled." }
+}

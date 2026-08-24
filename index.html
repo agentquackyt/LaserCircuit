@@ -42,14 +42,32 @@
     <button class="btn-bold btn-secondary hidden" id="complete-level-btn" type="button">
       Complete Level
     </button>
-    <dialog id="completion-dialog">
-      <h2>Level complete</h2>
-      <p>You completed this level in <strong id="completion-time">0</strong> seconds.</p>
-      <form method="dialog">
-        <button class="btn-bold btn-basic" type="submit">Share</button>
-        <button class="btn-bold btn-secondary" type="submit">Change Level</button>
-      </form>
-    </dialog>
+    <dialog id="completion-dialog" class="completion-dialog">
+    <div class="dialog-content">
+      <h2 class="dialog-title">Level Complete!</h2>
+
+      <div class="dialog-stats">
+        <div class="stat-row">
+          <span>Time:</span>
+          <strong id="completion-current-time">00:00.00</strong>
+        </div>
+        <div class="stat-row">
+          <span>Highscore:</span>
+          <strong id="completion-best-time">00:00.00</strong>
+        </div>
+        <div id="completion-new-record" class="new-record-banner hidden">
+          ★ NEW BEST TIME! ★
+        </div>
+      </div>
+
+      <!-- Action buttons below stats -->
+      <div class="dialog-actions">
+        <button id="completion-btn-menu" class="btn-bold btn-secondary">Levels</button>
+        <button id="completion-btn-retry" class="btn-bold btn-secondary">Retry</button>
+        <button id="completion-btn-finish" class="btn-bold btn-primary">Next Level</button>
+      </div>
+    </div>
+  </dialog>
   </main>
   <footer>© Jonas Gaden / 2026</footer>
 </body>
