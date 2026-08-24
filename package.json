@@ -6,5 +6,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "scripts": {
+    "dev": "bun run list && bun run server"
   }
 }

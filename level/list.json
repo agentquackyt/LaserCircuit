@@ -1,7 +1,38 @@
 [
-  { "id": "level1", "title": "Mirror Turn" },
-  { "id": "level2", "title": "Split Beam" },
-  { "id": "level3", "title": "Purple Mix" },
-  { "id": "level4", "title": "Mirror Maze" },
-  { "id": "level5", "title": "Light Maze" }
+  {
+    "id": "level1",
+    "title": "Mirror Turn"
+  },
+  {
+    "id": "level2",
+    "title": "Split Beam"
+  },
+  {
+    "id": "level3",
+    "title": "Purple Mix"
+  },
+  {
+    "id": "level4",
+    "title": "Light Maze"
+  },
+  {
+    "id": "level5",
+    "title": "Purple Mix"
+  },
+  {
+    "id": "level6",
+    "title": "Purple Mixing"
+  },
+  {
+    "id": "level7",
+    "title": "Corners"
+  },
+  {
+    "id": "level8",
+    "title": "Mixin's fun"
+  },
+  {
+    "id": "level9",
+    "title": "Final"
+  }
 ]

@@ -1,0 +1,153 @@
+{
+  "id": "level6",
+  "title": "Purple Mixing",
+  "grid": {
+    "width": 7,
+    "height": 7
+  },
+  "emitters": [
+    {
+      "x": 1,
+      "y": 1,
+      "dir": "right",
+      "color": "red"
+    },
+    {
+      "x": 1,
+      "y": 5,
+      "dir": "right",
+      "color": "blue"
+    }
+  ],
+  "targets": [
+    {
+      "x": 1,
+      "y": 3,
+      "color": "purple"
+    }
+  ],
+  "pieces": [
+    {
+      "type": "obstacle",
+      "x": 0,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 1,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 2,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 0,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 0,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 2,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 1,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 6
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 5
+    }
+  ],
+  "rules": {
+    "canPlaceOwnBlocks": true,
+    "blockCycle": [
+      null,
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "/",
+        "rotatable": true
+      },
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "\\",
+        "rotatable": true
+      },
+      {
+        "type": "splitter",
+        "x": 0,
+        "y": 0,
+        "orientation": "horizontal",
+        "rotatable": true
+      },
+      {
+        "type": "splitter",
+        "x": 0,
+        "y": 0,
+        "orientation": "vertical",
+        "rotatable": true
+      }
+    ]
+  },
+  "metadata": {
+    "description": "Direct light beams into targets."
+  }
+}

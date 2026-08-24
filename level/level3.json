@@ -1,25 +1,95 @@
 {
+  "0": {
+    "id": "level1",
+    "title": "Mirror Turn"
+  },
+  "1": {
+    "id": "level2",
+    "title": "Split Beam"
+  },
+  "2": {
+    "id": "level3",
+    "title": "Purple Mix"
+  },
+  "3": {
+    "id": "level4",
+    "title": "Mirror Maze"
+  },
+  "4": {
+    "id": "level5",
+    "title": "Light Maze"
+  },
   "id": "level3",
   "title": "Purple Mix",
-  "grid": { "width": 9, "height": 9 },
+  "grid": {
+    "width": 5,
+    "height": 5
+  },
   "emitters": [
-    { "x": 0, "y": 4, "dir": "right", "color": "red" },
-    { "x": 4, "y": 8, "dir": "up", "color": "blue" }
-  ],
-  "pieces": [
-    { "type": "splitter", "x": 4, "y": 4, "orientation": "horizontal", "rotatable": true }
+    {
+      "x": 0,
+      "y": 2,
+      "dir": "right",
+      "color": "red"
+    },
+    {
+      "x": 2,
+      "y": 4,
+      "dir": "up",
+      "color": "blue"
+    }
   ],
   "targets": [
-    { "x": 8, "y": 4, "color": "purple" }
+    {
+      "x": 4,
+      "y": 3,
+      "color": "purple"
+    }
+  ],
+  "pieces": [
+    {
+      "type": "mirror",
+      "x": 4,
+      "y": 2,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "splitter",
+      "x": 2,
+      "y": 2,
+      "orientation": "horizontal",
+      "rotatable": true
+    }
   ],
   "rules": {
-    "canPlaceOwnBlocks": true,
+    "canPlaceOwnBlocks": false,
     "blockCycle": [
       null,
-      { "type": "mirror", "x": 0, "y": 0, "orientation": "/", "rotatable": true },
-      { "type": "mirror", "x": 0, "y": 0, "orientation": "\\", "rotatable": true },
-      { "type": "splitter", "x": 0, "y": 0, "orientation": "horizontal", "rotatable": true }
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "/",
+        "rotatable": true
+      },
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "\\",
+        "rotatable": true
+      },
+      {
+        "type": "splitter",
+        "x": 0,
+        "y": 0,
+        "orientation": "horizontal",
+        "rotatable": true
+      }
     ]
   },
-  "metadata": { "description": "Combine red and blue at the splitter, then aim purple at the target. Left click cycles blocks while editing is enabled." }
+  "metadata": {
+    "description": "Combine red and blue at the splitter, then aim purple at the target. Left click cycles blocks while editing is enabled."
+  }
 }

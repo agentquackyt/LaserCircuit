@@ -10,7 +10,7 @@ const engine = Engine.getInstance();
 const world = engine.world;
 
 // Create canvas inside the #game-screen element
-const gameScreen = document.querySelector("#complete-level-btn") as HTMLElement | null;
+const gameScreen = document.querySelector(".complete-container") as HTMLElement | null;
 const canvas = document.createElement("canvas");
 canvas.className = "game-board";
 canvas.style.display = "block";

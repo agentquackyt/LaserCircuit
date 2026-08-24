@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Laser Circuit</title>
+  <title>LaserCircuit</title>
   <link rel="stylesheet" href="./css/index.css" />
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=home,replay" />
@@ -23,11 +23,8 @@
 <body>
   <header>
     <div class="box">
-      <h1 class="g-title">Laser Circuit</h1>
+      <h1 class="g-title">LaserCircuit</h1>
       <p class="g-description">Aim colored light through mirrors and splitters</p>
-    </div>
-    <div class="box highscore-box">
-      <a href="https://stardance.hackclub.com/projects/45734" class="btn-bold btn-basic small">View Stardance</a>
     </div>
   </header>
   <section id="title-screen" class="screen space">
@@ -49,9 +46,9 @@
   <main id="game-screen" class="hidden screen">
     <h1><span id="lvl-id">1.1</span> <span id="lvl-title">Circuit</span></h1>
     <p id="status">Loading level...</p>
-    <button class="btn-bold btn-secondary hidden" id="complete-level-btn" type="button">
-      Complete Level
-    </button>
+    <div class="complete-container">
+      <button class="btn-bold btn-secondary hidden" id="complete-level-btn" type="button">Complete Level</button>
+    </div>
     <dialog id="completion-dialog" class="completion-dialog">
       <div class="dialog-content">
         <h2 class="dialog-title">Level Complete!</h2>

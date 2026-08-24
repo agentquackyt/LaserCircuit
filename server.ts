@@ -1,7 +1,7 @@
 import indexHtml from "./index.html";
 import editorHtml from "./editor.html";
 
-Bun.serve({
+const server = Bun.serve({
     port: 3000,
     routes: {
         "/": indexHtml,
@@ -12,7 +12,7 @@ Bun.serve({
         console.log(`[Bun] ${req.method} ${url.pathname}`);
         if (url.pathname.startsWith("/level/")) {
             const levelId = url.pathname.split("/").pop();
-            console.log(`[Bun] Fetching level: ${levelId}`);
+            console.log(`[Bun] Fetching level: ${levelId}`); 
             if (levelId) {
                 const levelPath = `./level/${levelId}`;
                 try {
@@ -27,3 +27,5 @@ Bun.serve({
 
     },
 })
+
+console.log(`Server running at http://localhost:${server.port}`);

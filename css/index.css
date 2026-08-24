@@ -93,6 +93,12 @@ header {
   align-self: center;
 }
 
+.complete-container {
+  display: flex;
+  justify-content: center;
+  height: 3rem;
+} 
+
 #completion-dialog {
   border: 2px solid #4b4b4b;
   border-radius: .75rem;
@@ -125,7 +131,7 @@ body:not(#title-screen.hidden) .highscore-box {
   aspect-ratio: 4/3;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center
 
 }
 
@@ -138,9 +144,8 @@ dialog {
 
 .icon {
   max-height: 60dvh;
-  max-width: 100%;
+  max-width: 70%;
   border-radius: 1rem;
-  transform: skew(-4deg, 2deg);
 }
 
 /* 3x3 Tabbed Level Selection */
@@ -181,9 +186,9 @@ dialog {
     align-items: center;
     justify-content: center;
     min-height: 72px;
-    padding: 8px 4px;
+    padding: 3rem 1rem;
     text-align: center;
-    aspect-ratio: 6/5;
+    gap: .5rem;
 }
 
 .level-cell-btn .level-number {

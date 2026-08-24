@@ -197,6 +197,11 @@ export class LevelSystem<T = unknown> extends EntitySystem {
             btn.className = `btn-bold level-cell-btn ${completed ? "btn-secondary" : "btn-basic"}`;
             btn.dataset.levelId = item.id;
 
+
+            const labelID = document.createElement("span");
+            labelID.className = "level-id";
+            labelID.textContent = `${this.currentTabIndex + 1}.${(globalIndex % 9) + 1}`;
+
             const labelTitle = document.createElement("span");
             labelTitle.className = "level-number";
             labelTitle.textContent = item.title || `Level ${globalIndex + 1}`;
@@ -205,6 +210,7 @@ export class LevelSystem<T = unknown> extends EntitySystem {
             labelScore.className = "level-score";
             labelScore.textContent = score ? HighscoreSystem.formatScore(score.time, score.moves) : "--:--";
 
+            btn.appendChild(labelID);
             btn.appendChild(labelTitle);
             btn.appendChild(labelScore);
 

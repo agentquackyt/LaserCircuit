@@ -2,126 +2,292 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Laser Level Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Laser Level Studio</title>
   <style>
     :root {
-      --bg: #1a1d24;
-      --panel: #262c37;
-      --card: #313846;
+      --bg-main: #0f1217;
+      --bg-panel: #181c24;
+      --bg-card: #212631;
+      --bg-card-hover: #29303d;
       --border: rgba(255, 255, 255, 0.08);
-      --text: #e2e8f0;
-      --text-dim: #94a3b8;
+      --border-focus: rgba(59, 130, 246, 0.6);
+      --text: #f1f5f9;
+      --text-muted: #8492a6;
       --accent: #3b82f6;
       --accent-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --sim: #8b5cf6;
+      --sim-hover: #7c3aed;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
-    
-    #sidebar { width: 380px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; padding: 18px; gap: 16px; }
-    #viewport { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle at center, #242b38 0%, #15181e 100%); }
-    
-    h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; color: #fff; }
-    .section { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
-    .section-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; }
-    
-    .grid-row { display: flex; gap: 8px; margin-bottom: 8px; }
-    .grid-row:last-child { margin-bottom: 0; }
-    label { font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px; flex: 1; color: var(--text-dim); }
-    input[type="text"], input[type="number"], textarea, select {
-      background: #1e232d; border: 1px solid var(--border); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.85rem; outline: none;
-    }
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-    textarea { resize: vertical; height: 50px; }
 
-    /* Palette Tools */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg-main); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+    /* Leftmost Directory Tree */
+    #folder-panel {
+      width: 220px;
+      background: #13161c;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+    .folder-header {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .folder-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+    #file-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .file-item {
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.15s ease;
+    }
+    .file-item:hover { background: var(--bg-card); color: var(--text); }
+    .file-item.active { background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-weight: 600; }
+    .file-item .badge { font-size: 0.65rem; padding: 2px 5px; border-radius: 4px; background: rgba(0,0,0,0.3); }
+
+    /* Main Settings / Tool Sidebar */
+    #sidebar {
+      width: 330px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 14px;
+      gap: 12px;
+    }
+
+    #viewport {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: radial-gradient(circle at center, #1e2430 0%, #0d1015 100%);
+    }
+
+    .section {
+      background: var(--bg-card);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .section-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .grid-row { display: flex; gap: 8px; }
+    label { font-size: 0.78rem; display: flex; flex-direction: column; gap: 4px; flex: 1; color: var(--text-muted); }
+    input[type="text"], input[type="number"], textarea, select {
+      background: #15181f;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 6px 8px;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      outline: none;
+      transition: border 0.15s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--border-focus); }
+    textarea { resize: vertical; height: 42px; }
+
+    /* Palette Grid */
     .palette-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .tool-btn {
-      background: #1e232d; border: 1px solid var(--border); color: var(--text); padding: 8px 4px;
-      border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-align: center; display: flex;
-      flex-direction: column; align-items: center; gap: 4px; transition: all 0.15s ease;
+      background: #171b22;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 4px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      position: relative;
+      transition: all 0.15s;
     }
-    .tool-btn:hover { background: #2a313d; }
-    .tool-btn.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.15); color: #fff; }
-    .tool-btn span.icon { font-size: 1.1rem; font-family: monospace; font-weight: bold; }
+    .tool-btn kbd { position: absolute; top: 3px; right: 4px; font-size: 0.58rem; color: var(--text-muted); }
+    .tool-btn:hover { background: var(--bg-card-hover); }
+    .tool-btn.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.18); color: #fff; }
+    .tool-btn span.icon { font-size: 1.05rem; font-family: monospace; font-weight: bold; }
 
-    /* Color picker buttons */
+    /* Color Dot Picker */
     .color-picker { display: flex; gap: 6px; }
     .color-dot {
-      flex: 1; height: 26px; border-radius: 4px; cursor: pointer; border: 2px solid transparent;
-      display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;
+      flex: 1;
+      height: 22px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s;
     }
-    .color-dot.active { border-color: #fff; transform: scale(1.05); }
+    .color-dot.active { border-color: #fff; transform: scale(1.1); }
 
-    /* Action Buttons */
-    .btn-row { display: flex; gap: 8px; }
+    /* Actions */
+    .btn-row { display: flex; gap: 6px; }
     button.btn {
-      flex: 1; background: var(--accent); border: none; color: #fff; padding: 9px;
-      border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      flex: 1;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      padding: 7px 10px;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
     }
     button.btn:hover { background: var(--accent-hover); }
-    button.btn-secondary { background: #3f4756; }
-    button.btn-secondary:hover { background: #4b5568; }
-    button.btn-danger { background: #dc2626; }
-    button.btn-danger:hover { background: #b91c1c; }
+    button.btn-success { background: var(--success); }
+    button.btn-success:hover { background: #059669; }
+    button.btn-secondary { background: #2f3644; }
+    button.btn-secondary:hover { background: #3b4455; }
+    button.btn-danger { background: var(--danger); }
+    button.btn-danger:hover { background: #dc2626; }
+    button.btn-sim { background: var(--sim); }
+    button.btn-sim:hover { background: var(--sim-hover); }
+    button.btn-sim.sim-active { background: #f43f5e; }
 
-    canvas { border-radius: 12px; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4); cursor: crosshair; }
-    .hints { font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 8px; }
+    /* Toast Notification */
+    #toast {
+      position: absolute;
+      top: 18px;
+      padding: 8px 18px;
+      border-radius: 24px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: none;
+      z-index: 10;
+    }
+
+    canvas { border-radius: 12px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5); cursor: crosshair; }
+    .hints { font-size: 0.72rem; color: var(--text-muted); text-align: center; margin-top: 10px; }
+    kbd { font-family: inherit; background: #161920; border: 1px solid var(--border); padding: 1px 4px; border-radius: 3px; color: #cbd5e1; }
   </style>
 </head>
 <body>
 
-  <div id="sidebar">
-    <h2>Level Designer</h2>
+  <!-- Folder / Workspace Tree -->
+  <div id="folder-panel">
+    <div class="folder-header">
+      <span class="folder-title">Workspace</span>
+      <button class="btn btn-secondary" id="btn-open-folder" style="padding: 4px 8px; font-size: 0.7rem;">Folder</button>
+    </div>
+    <div id="file-list">
+      <div style="font-size: 0.75rem; color: var(--text-muted); padding: 12px; text-align: center;">
+        No folder opened.<br><br>Click <b>Folder</b> or press <kbd>Ctrl+Shift+O</kbd> to load a levels directory.
+      </div>
+    </div>
+    <div style="padding: 8px; border-top: 1px solid var(--border);">
+      <button class="btn btn-secondary" id="btn-new-level" style="width: 100%;">+ New Level <kbd>Ctrl+N</kbd></button>
+    </div>
+  </div>
 
-    <!-- Metadata -->
+  <!-- Level Parameters & Palette -->
+  <div id="sidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 1rem;">Level Studio</h2>
+      <button class="btn btn-sim" id="btn-toggle-sim" style="flex: 0 0 auto; padding: 5px 10px;">
+        <span id="sim-btn-label">Simulate</span> <kbd>T</kbd>
+      </button>
+    </div>
+
+    <!-- Quick Save/Export Actions -->
+    <div class="btn-row">
+      <button class="btn btn-success" id="btn-save">Save <kbd>Ctrl+S</kbd></button>
+      <button class="btn btn-secondary" id="btn-download">Download</button>
+      <button class="btn btn-danger" id="btn-clear">Clear</button>
+    </div>
+
+    <!-- Metadata Section -->
     <div class="section">
-      <div class="section-title">Level Meta</div>
-      <div class="grid-row">
-        <label>ID <input type="text" id="meta-id" value="level_custom" /></label>
-        <label>Title <input type="text" id="meta-title" value="My Custom Level" /></label>
+      <div class="section-title">
+        <span>Metadata</span>
+        <button id="btn-next-id" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.7rem; font-weight:bold;">+ Increment ID</button>
       </div>
       <div class="grid-row">
-        <label>Width <input type="number" id="grid-w" min="3" max="15" value="9" /></label>
-        <label>Height <input type="number" id="grid-h" min="3" max="15" value="9" /></label>
+        <label>ID <input type="text" id="meta-id" value="level_1" /></label>
+        <label>Title <input type="text" id="meta-title" value="Level 1" /></label>
       </div>
-      <label style="margin-top: 6px;">Description
-        <textarea id="meta-desc">Solve the light puzzle.</textarea>
+      <div class="grid-row">
+        <label>Grid Width <input type="number" id="grid-w" min="3" max="15" value="9" /></label>
+        <label>Grid Height <input type="number" id="grid-h" min="3" max="15" value="9" /></label>
+      </div>
+      <label>Description
+        <textarea id="meta-desc">Direct light beams into targets.</textarea>
       </label>
     </div>
 
-    <!-- Active Tool Configuration -->
+    <!-- Palette -->
     <div class="section">
-      <div class="section-title">Tool Type</div>
+      <div class="section-title">Tool Palette</div>
       <div class="palette-grid">
-        <button class="tool-btn active" data-tool="select"><span class="icon">↖</span>Select / Move</button>
-        <button class="tool-btn" data-tool="eraser"><span class="icon">⌫</span>Erase</button>
-        <button class="tool-btn" data-tool="obstacle"><span class="icon">⬛</span>Obstacle</button>
-        <button class="tool-btn" data-tool="emitter"><span class="icon">⮞</span>Emitter</button>
-        <button class="tool-btn" data-tool="target"><span class="icon">◎</span>Target</button>
-        <button class="tool-btn" data-tool="mirror"><span class="icon">╱</span>Mirror</button>
-        <button class="tool-btn" data-tool="splitter"><span class="icon">+</span>Splitter</button>
-        <button class="tool-btn" data-tool="adder"><span class="icon">#</span>Adder</button>
+        <button class="tool-btn active" data-tool="select"><kbd>1</kbd><span class="icon">↖</span>Select</button>
+        <button class="tool-btn" data-tool="eraser"><kbd>2</kbd><span class="icon">⌫</span>Erase</button>
+        <button class="tool-btn" data-tool="obstacle"><kbd>3</kbd><span class="icon">⬛</span>Obstacle</button>
+        <button class="tool-btn" data-tool="emitter"><kbd>4</kbd><span class="icon">⮞</span>Emitter</button>
+        <button class="tool-btn" data-tool="target"><kbd>5</kbd><span class="icon">◎</span>Target</button>
+        <button class="tool-btn" data-tool="mirror"><kbd>6</kbd><span class="icon">╱</span>Mirror</button>
+        <button class="tool-btn" data-tool="splitter"><kbd>7</kbd><span class="icon">+</span>Splitter</button>
       </div>
     </div>
 
-    <!-- Tool Parameters -->
+    <!-- Tool Options -->
     <div class="section" id="tool-options">
-      <div class="section-title">Tool Options</div>
-      
-      <div id="color-selector-wrap" style="margin-bottom: 10px;">
-        <label style="margin-bottom: 6px;">Color</label>
+      <div class="section-title">Active Settings</div>
+      <div id="color-selector-wrap">
+        <label style="margin-bottom: 4px;">Color <kbd style="align-self: flex-end;">C</kbd></label>
         <div class="color-picker">
           <div class="color-dot active" data-color="red" style="background: #ff4b4b;"></div>
           <div class="color-dot" data-color="green" style="background: #4dff88;"></div>
           <div class="color-dot" data-color="blue" style="background: #4da3ff;"></div>
-          <div class="color-dot" data-color="yellow" style="background: #ffe45c; color: #000;"></div>
+          <div class="color-dot" data-color="yellow" style="background: #ffe45c;"></div>
           <div class="color-dot" data-color="purple" style="background: #d56bff;"></div>
-          <div class="color-dot" data-color="cyan" style="background: #62f5ff; color: #000;"></div>
+          <div class="color-dot" data-color="cyan" style="background: #62f5ff;"></div>
         </div>
       </div>
 
       <div class="grid-row">
-        <label id="dir-wrap">Direction
+        <label id="dir-wrap">Direction <kbd>R</kbd>
           <select id="tool-dir">
             <option value="right">Right (⇨)</option>
             <option value="down">Down (⇩)</option>
@@ -129,7 +295,7 @@
             <option value="up">Up (⇧)</option>
           </select>
         </label>
-        <label id="orient-wrap" style="display:none;">Orientation
+        <label id="orient-wrap" style="display:none;">Orientation <kbd>R</kbd>
           <select id="tool-orient">
             <option value="/">Diagonal /</option>
             <option value="\">Diagonal \</option>
@@ -138,42 +304,42 @@
           </select>
         </label>
       </div>
-      <label style="flex-direction: row; align-items: center; gap: 8px; margin-top: 8px;" id="rotatable-wrap">
+
+      <label style="flex-direction: row; align-items: center; gap: 8px; margin-top: 4px;" id="rotatable-wrap">
         <input type="checkbox" id="tool-rotatable" checked /> Player Rotatable
       </label>
     </div>
 
     <!-- Rules -->
     <div class="section">
-      <div class="section-title">Level Rules</div>
+      <div class="section-title">Rules</div>
       <label style="flex-direction: row; align-items: center; gap: 8px;">
         <input type="checkbox" id="rule-place-blocks" checked /> canPlaceOwnBlocks
       </label>
     </div>
-
-    <!-- Import / Export Actions -->
-    <div class="btn-row">
-      <button class="btn btn-secondary" id="btn-import">Import JSON</button>
-      <button class="btn" id="btn-export">Export JSON</button>
-    </div>
-    <button class="btn btn-danger" id="btn-clear">Clear Grid</button>
-
-    <input type="file" id="file-input" style="display: none;" accept=".json" />
   </div>
 
+  <!-- Center Interactive Canvas Viewport -->
   <div id="viewport">
+    <div id="toast"></div>
     <canvas id="canvas" width="620" height="620"></canvas>
-    <div class="hints">Left-Click: Place/Select &bull; Right-Click: Rotate/Cycle &bull; Middle-Click: Delete</div>
+    <div class="hints">
+      <kbd>T</kbd> Simulation &bull; 
+      <kbd>R</kbd>/<kbd>Space</kbd> Rotate &bull; 
+      <kbd>C</kbd> Color &bull; 
+      <kbd>Del</kbd>/<kbd>X</kbd> Delete &bull; 
+      <kbd>1-7</kbd> Tool &bull; 
+      <kbd>Ctrl+S</kbd> Save
+    </div>
   </div>
 
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    // Level Model
     let level = {
-      id: "level_custom",
-      title: "My Custom Level",
+      id: "level_1",
+      title: "Level 1",
       grid: { width: 9, height: 9 },
       emitters: [],
       targets: [],
@@ -183,17 +349,26 @@
         blockCycle: [
           null,
           { type: "mirror", x: 0, y: 0, orientation: "/", rotatable: true },
-          { type: "mirror", x: 0, y: 0, orientation: "\\", rotatable: true }
+          { type: "mirror", x: 0, y: 0, orientation: "\\", rotatable: true },
+          { type: "splitter", x: 0, y: 0, orientation: "horizontal", rotatable: true },
+          { type: "splitter", x: 0, y: 0, orientation: "vertical", rotatable: true }
         ]
       },
-      metadata: { description: "Solve the light puzzle." }
+      metadata: { description: "Direct light beams into targets." }
     };
 
     let activeTool = "select";
     let activeColor = "red";
-    const padding = 6;
-    const radius = 6;
+    let hoveredCell = null;
+    let isSimulating = false;
+    let simulationResult = null;
 
+    // Folder Workspace Handles
+    let directoryHandle = null;
+    let activeFileHandle = null;
+    let folderFiles = new Map(); // name -> FileSystemFileHandle
+
+    const COLORS = ["red", "green", "blue", "yellow", "purple", "cyan"];
     const COLOR_MAP = {
       red: "#ff4b4b",
       green: "#4dff88",
@@ -204,6 +379,346 @@
       white: "#ffffff"
     };
 
+    const COLOR_MASKS = { red: 1, green: 2, yellow: 3, blue: 4, purple: 5, cyan: 6, white: 7 };
+    const DELTA_BY_DIRECTION = {
+      up: { x: 0, y: -1 },
+      right: { x: 1, y: 0 },
+      down: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+    };
+
+    const padding = 6;
+    const radius = 6;
+
+    function showToast(msg, isSuccess = true) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.style.color = isSuccess ? "#4ade80" : "#f87171";
+      toast.style.display = "block";
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => { toast.style.display = "none"; }, 2400);
+    }
+
+    // Level ID auto-increment
+    function getNextLevelId(currentId) {
+      const match = currentId.match(/^(.*?)(\d+)$/);
+      if (match) {
+        const prefix = match[1] || "level_";
+        const num = parseInt(match[2], 10) + 1;
+        return `${prefix}${num}`;
+      }
+      return "level_1";
+    }
+
+    function incrementLevelId() {
+      const idInput = document.getElementById("meta-id");
+      const titleInput = document.getElementById("meta-title");
+      const nextId = getNextLevelId(idInput.value);
+      idInput.value = nextId;
+
+      const numMatch = nextId.match(/\d+$/);
+      if (numMatch) titleInput.value = `Level ${numMatch[0]}`;
+      syncLevelMeta();
+    }
+
+    document.getElementById("btn-next-id").addEventListener("click", incrementLevelId);
+
+    // Folder Workspace Operations
+    async function openDirectory() {
+      if (!window.showDirectoryPicker) {
+        alert("File System Directory Access is not supported in this browser. Please use Chrome/Edge or download JSON files directly.");
+        return;
+      }
+      try {
+        directoryHandle = await window.showDirectoryPicker();
+        await refreshFolderList();
+        showToast("Folder loaded!");
+      } catch (err) {
+        if (err.name !== "AbortError") console.error(err);
+      }
+    }
+
+    async function refreshFolderList() {
+      if (!directoryHandle) return;
+      folderFiles.clear();
+      const listEl = document.getElementById("file-list");
+      listEl.innerHTML = "";
+
+      for await (const entry of directoryHandle.values()) {
+        if (entry.kind === "file" && entry.name.endsWith(".json")) {
+          folderFiles.set(entry.name, entry);
+        }
+      }
+
+      const sortedNames = Array.from(folderFiles.keys()).sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })
+      );
+
+      if (sortedNames.length === 0) {
+        listEl.innerHTML = `<div style="font-size:0.75rem; color:var(--text-muted); padding:10px; text-align:center;">No .json levels found</div>`;
+        return;
+      }
+
+      for (const name of sortedNames) {
+        const item = document.createElement("div");
+        item.className = "file-item" + (activeFileHandle && activeFileHandle.name === name ? " active" : "");
+        item.innerHTML = `<span>${name}</span><span class="badge">JSON</span>`;
+        item.addEventListener("click", () => loadFileFromFolder(name));
+        listEl.appendChild(item);
+      }
+    }
+
+    async function loadFileFromFolder(filename) {
+      const handle = folderFiles.get(filename);
+      if (!handle) return;
+      try {
+        activeFileHandle = handle;
+        const file = await handle.getFile();
+        const text = await file.text();
+        populateFromData(JSON.parse(text), filename);
+        refreshFolderList();
+        showToast(`Loaded ${filename}`);
+      } catch (err) {
+        console.error(err);
+        showToast("Error loading file", false);
+      }
+    }
+
+    async function saveCurrentLevel() {
+      syncLevelMeta();
+      const content = JSON.stringify(level, null, 2);
+
+      // If already linked to a folder file
+      if (activeFileHandle && directoryHandle) {
+        try {
+          const writable = await activeFileHandle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          showToast(`Saved to ${activeFileHandle.name}`);
+          return;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      // If folder is open but file not yet saved
+      if (directoryHandle) {
+        try {
+          const fileName = `${level.id || "level"}.json`;
+          activeFileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+          const writable = await activeFileHandle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          await refreshFolderList();
+          showToast(`Saved to ${fileName}`);
+          return;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      // Standalone Fallback using Save File Picker
+      if (window.showSaveFilePicker) {
+        try {
+          activeFileHandle = await window.showSaveFilePicker({
+            suggestedName: `${level.id || "level"}.json`,
+            types: [{ description: "JSON Level", accept: { "application/json": [".json"] } }]
+          });
+          const writable = await activeFileHandle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          showToast("File saved!");
+        } catch (err) {
+          if (err.name !== "AbortError") console.error(err);
+        }
+      } else {
+        downloadBlob(content);
+      }
+    }
+
+    function createNewLevel() {
+      const nextId = getNextLevelId(level.id);
+      const numMatch = nextId.match(/\d+$/);
+      level = {
+        id: nextId,
+        title: numMatch ? `Level ${numMatch[0]}` : "New Level",
+        grid: { width: 9, height: 9 },
+        emitters: [],
+        targets: [],
+        pieces: [],
+        rules: {
+          canPlaceOwnBlocks: true,
+          blockCycle: [
+            null,
+            { type: "mirror", x: 0, y: 0, orientation: "/", rotatable: true },
+            { type: "mirror", x: 0, y: 0, orientation: "\\", rotatable: true },
+            { type: "splitter", x: 0, y: 0, orientation: "horizontal", rotatable: true },
+            { type: "splitter", x: 0, y: 0, orientation: "vertical", rotatable: true }
+          ]
+        },
+        metadata: { description: "Direct light beams into targets." }
+      };
+      activeFileHandle = null;
+      populateFromData(level, null);
+      if (directoryHandle) refreshFolderList();
+      showToast(`Created ${nextId}`);
+    }
+
+    // Simulation Engine
+    function maskToColor(mask) {
+      if (mask === 1) return "red";
+      if (mask === 2) return "green";
+      if (mask === 3) return "yellow";
+      if (mask === 4) return "blue";
+      if (mask === 5) return "purple";
+      if (mask === 6) return "cyan";
+      if (mask === 7) return "white";
+      return undefined;
+    }
+
+    function mixColors(colors) {
+      if (!colors || colors.length === 0) return undefined;
+      let mask = 0;
+      for (const c of colors) mask |= (COLOR_MASKS[c] ?? 0);
+      return maskToColor(mask);
+    }
+
+    function reflectDir(dir, mirror) {
+      if (mirror === "/") {
+        if (dir === "up") return "right";
+        if (dir === "right") return "up";
+        if (dir === "down") return "left";
+        return "down";
+      }
+      if (dir === "up") return "left";
+      if (dir === "left") return "up";
+      if (dir === "down") return "right";
+      return "down";
+    }
+
+    function runSimulation() {
+      const width = level.grid.width;
+      const height = level.grid.height;
+      const segments = [];
+      const cellHits = new Map();
+      const targetColors = new Map();
+
+      const targetByCell = new Map();
+      level.targets.forEach(t => targetByCell.set(`${t.x},${t.y}`, t));
+      const emitterByCell = new Map();
+      level.emitters.forEach(e => emitterByCell.set(`${e.x},${e.y}`, e));
+      const pieceByCell = new Map();
+      level.pieces.forEach(p => pieceByCell.set(`${p.x},${p.y}`, p));
+
+      const pushCellHit = (x, y, color) => {
+        const key = `${x},${y}`;
+        const cur = cellHits.get(key) || [];
+        cur.push(color);
+        cellHits.set(key, cur);
+      };
+
+      const trace = (initial) => {
+        const splitterInputs = new Map();
+        const stateCounts = new Map();
+        const queue = [...initial];
+
+        while (queue.length > 0) {
+          const beam = queue.shift();
+          const delta = DELTA_BY_DIRECTION[beam.dir];
+          const nx = beam.x + delta.x;
+          const ny = beam.y + delta.y;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+
+          const key = `${nx},${ny}`;
+          segments.push({ x1: beam.x, y1: beam.y, x2: nx, y2: ny, color: beam.color });
+          pushCellHit(nx, ny, beam.color);
+
+          if (targetByCell.has(key) || emitterByCell.has(key)) continue;
+
+          const stateKey = `${nx},${ny},${beam.dir},${beam.color}`;
+          const seen = stateCounts.get(stateKey) || 0;
+          if (seen >= 2) continue;
+          stateCounts.set(stateKey, seen + 1);
+
+          const piece = pieceByCell.get(key);
+          if (!piece) {
+            queue.push({ x: nx, y: ny, dir: beam.dir, color: beam.color });
+            continue;
+          }
+
+          if (piece.type === "obstacle") continue;
+
+          if (piece.type === "mirror") {
+            queue.push({ x: nx, y: ny, dir: reflectDir(beam.dir, piece.orientation), color: beam.color });
+            continue;
+          }
+
+          if (piece.type === "splitter") {
+            const cur = splitterInputs.get(key) || { colors: [], inDirs: [] };
+            cur.colors.push(beam.color);
+            cur.inDirs.push(beam.dir);
+            splitterInputs.set(key, cur);
+            continue;
+          }
+        }
+        return { splitterInputs };
+      };
+
+      let frontier = level.emitters.map(e => ({ ...e }));
+      for (let round = 0; round < 32 && frontier.length > 0; round++) {
+        const { splitterInputs } = trace(frontier);
+        const nextFrontier = [];
+
+        for (const piece of level.pieces) {
+          if (piece.type !== "splitter") continue;
+          const key = `${piece.x},${piece.y}`;
+          const input = splitterInputs.get(key);
+          if (!input || input.colors.length === 0) continue;
+          const mixed = mixColors(input.colors);
+          if (!mixed) continue;
+
+          const oppDirs = input.inDirs.map(d => ({ up: "down", right: "left", down: "up", left: "right" }[d]));
+          for (const dir of ["up", "right", "down", "left"]) {
+            if (oppDirs.includes(dir)) continue;
+            nextFrontier.push({ x: piece.x, y: piece.y, dir, color: mixed });
+          }
+        }
+        frontier = nextFrontier;
+      }
+
+      let solved = level.targets.length > 0;
+      for (const t of level.targets) {
+        const key = `${t.x},${t.y}`;
+        const color = mixColors(cellHits.get(key) || []);
+        targetColors.set(key, color);
+        if (color !== t.color) solved = false;
+      }
+
+      return { segments, targetColors, solved };
+    }
+
+    function toggleSimulation() {
+      isSimulating = !isSimulating;
+      const simBtn = document.getElementById("btn-toggle-sim");
+      const simLabel = document.getElementById("sim-btn-label");
+
+      if (isSimulating) {
+        simBtn.classList.add("sim-active");
+        simLabel.textContent = "Stop";
+        simulationResult = runSimulation();
+        showToast(simulationResult.solved ? "✓ Level Solved!" : "Simulating Rays...");
+      } else {
+        simBtn.classList.remove("sim-active");
+        simLabel.textContent = "Simulate";
+        simulationResult = null;
+      }
+      render();
+    }
+
+    function recomputeIfSimulating() {
+      if (isSimulating) simulationResult = runSimulation();
+    }
+
     function syncToolUI() {
       const colorWrap = document.getElementById("color-selector-wrap");
       const dirWrap = document.getElementById("dir-wrap");
@@ -212,8 +727,8 @@
       const rotWrap = document.getElementById("rotatable-wrap");
 
       colorWrap.style.display = (activeTool === "emitter" || activeTool === "target") ? "block" : "none";
-      dirWrap.style.display = (activeTool === "emitter" || activeTool === "adder") ? "block" : "none";
-      rotWrap.style.display = (["mirror", "splitter", "adder"].includes(activeTool)) ? "flex" : "none";
+      dirWrap.style.display = (activeTool === "emitter") ? "block" : "none";
+      rotWrap.style.display = (["mirror", "splitter"].includes(activeTool)) ? "flex" : "none";
       
       if (activeTool === "mirror") {
         orientWrap.style.display = "block";
@@ -260,7 +775,7 @@
       ctx.fillStyle = "#2b313c";
       ctx.fill();
 
-      // Cells
+      // Background Tiles
       for (let y = 0; y < rows; y++) {
         for (let x = 0; x < cols; x++) {
           const px = originX + padding + x * (cellW + padding);
@@ -274,7 +789,51 @@
         }
       }
 
-      // Obstacles
+      // Simulated Beams
+      if (isSimulating && simulationResult) {
+        const mixBySeg = new Map();
+        for (const seg of simulationResult.segments) {
+          const [x1, y1, x2, y2] = (seg.x1 < seg.x2 || (seg.x1 === seg.x2 && seg.y1 <= seg.y2))
+            ? [seg.x1, seg.y1, seg.x2, seg.y2]
+            : [seg.x2, seg.y2, seg.x1, seg.y1];
+          const key = `${x1},${y1},${x2},${y2}`;
+          const existing = mixBySeg.get(key) || { x1, y1, x2, y2, mask: 0, count: 0 };
+          existing.mask |= (COLOR_MASKS[seg.color] ?? 0);
+          existing.count++;
+          mixBySeg.set(key, existing);
+        }
+
+        const coreWidth = Math.max(2.5, Math.min(cellW, cellH) * 0.13);
+        ctx.save();
+        ctx.lineCap = "round";
+        for (const mixed of mixBySeg.values()) {
+          const cx1 = originX + padding + mixed.x1 * (cellW + padding) + cellW / 2;
+          const cy1 = originY + padding + mixed.y1 * (cellH + padding) + cellH / 2;
+          const cx2 = originX + padding + mixed.x2 * (cellW + padding) + cellW / 2;
+          const cy2 = originY + padding + mixed.y2 * (cellH + padding) + cellH / 2;
+          const color = COLOR_MAP[maskToColor(mixed.mask)] || "#ffffff";
+
+          // Wide Glow
+          ctx.strokeStyle = color;
+          ctx.globalAlpha = 0.35;
+          ctx.lineWidth = coreWidth * 2.2;
+          ctx.beginPath();
+          ctx.moveTo(cx1, cy1);
+          ctx.lineTo(cx2, cy2);
+          ctx.stroke();
+
+          // Core Beam
+          ctx.globalAlpha = 0.95;
+          ctx.lineWidth = coreWidth;
+          ctx.beginPath();
+          ctx.moveTo(cx1, cy1);
+          ctx.lineTo(cx2, cy2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Obstacles (Cover rays)
       for (const piece of level.pieces.filter(p => p.type === "obstacle")) {
         const px = originX + padding + piece.x * (cellW + padding);
         const py = originY + padding + piece.y * (cellH + padding);
@@ -282,6 +841,7 @@
         ctx.fillStyle = "#262c37";
         ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.lineWidth = 1;
         ctx.stroke();
       }
 
@@ -289,12 +849,19 @@
       for (const t of level.targets) {
         const px = originX + padding + t.x * (cellW + padding);
         const py = originY + padding + t.y * (cellH + padding);
+        const hitColor = simulationResult?.targetColors.get(`${t.x},${t.y}`);
+        const isHit = hitColor === t.color;
+
         roundRect(ctx, px + 4, py + 4, cellW - 8, cellH - 8, radius);
-        ctx.fillStyle = "#262c35";
+        ctx.fillStyle = hitColor ? (COLOR_MAP[hitColor] || "#262c35") : "#262c35";
+        ctx.globalAlpha = hitColor ? (isHit ? 0.35 : 0.2) : 0.96;
         ctx.fill();
+        ctx.globalAlpha = 1;
+
         ctx.strokeStyle = COLOR_MAP[t.color] || "#fff";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = isHit ? 3 : 2;
         ctx.stroke();
+
         ctx.beginPath();
         ctx.arc(px + cellW / 2, py + cellH / 2, cellW * 0.14, 0, Math.PI * 2);
         ctx.fillStyle = COLOR_MAP[t.color] || "#fff";
@@ -308,6 +875,10 @@
         roundRect(ctx, cx - cellW * 0.4, cy - cellH * 0.4, cellW * 0.8, cellH * 0.8, radius);
         ctx.fillStyle = COLOR_MAP[e.color] || "#fff";
         ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
         ctx.fillStyle = "#fff";
         ctx.font = `bold ${cellW * 0.45}px sans-serif`;
         ctx.textAlign = "center";
@@ -321,12 +892,27 @@
         if (piece.type === "obstacle") continue;
         const cx = originX + padding + piece.x * (cellW + padding) + cellW / 2;
         const cy = originY + padding + piece.y * (cellH + padding) + cellH / 2;
-        ctx.fillStyle = piece.type === "mirror" ? "#68a9ff" : piece.type === "splitter" ? "#58ffd0" : "#fff";
+        ctx.fillStyle = piece.type === "mirror" ? "#68a9ff" : "#58ffd0";
         ctx.font = `bold ${cellW * 0.65}px monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        const glyph = piece.type === "mirror" ? piece.orientation : piece.type === "splitter" ? "+" : "#";
+        const glyph = piece.type === "mirror" ? piece.orientation : "+";
         ctx.fillText(glyph, cx, cy);
+        if (piece.type === "splitter" && piece.orientation === "vertical") {
+          ctx.strokeStyle = "rgba(255,255,255,0.4)";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(cx - cellW * 0.25, cy - cellH * 0.35, cellW * 0.5, cellH * 0.7);
+        }
+      }
+
+      // Hover
+      if (hoveredCell && hoveredCell.x >= 0 && hoveredCell.y >= 0 && hoveredCell.x < cols && hoveredCell.y < rows) {
+        const px = originX + padding + hoveredCell.x * (cellW + padding);
+        const py = originY + padding + hoveredCell.y * (cellH + padding);
+        roundRect(ctx, px, py, cellW, cellH, radius);
+        ctx.strokeStyle = "rgba(59, 130, 246, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
       }
     }
 
@@ -336,11 +922,35 @@
       level.pieces = level.pieces.filter(p => !(p.x === x && p.y === y));
     }
 
+    function rotateAt(x, y) {
+      const emitter = level.emitters.find(e => e.x === x && e.y === y);
+      if (emitter) {
+        const dirs = ["up", "right", "down", "left"];
+        emitter.dir = dirs[(dirs.indexOf(emitter.dir) + 1) % dirs.length];
+        recomputeIfSimulating();
+        render();
+        return;
+      }
+      const piece = level.pieces.find(p => p.x === x && p.y === y);
+      if (piece) {
+        if (piece.type === "mirror") piece.orientation = piece.orientation === "/" ? "\\" : "/";
+        if (piece.type === "splitter") piece.orientation = piece.orientation === "horizontal" ? "vertical" : "horizontal";
+        recomputeIfSimulating();
+        render();
+      }
+    }
+
     function handleAction(x, y, isRightClick = false) {
       if (x < 0 || y < 0 || x >= level.grid.width || y >= level.grid.height) return;
       
-      if (isRightClick || activeTool === "eraser") {
+      if (isRightClick || activeTool === "select") {
+        rotateAt(x, y);
+        return;
+      }
+
+      if (activeTool === "eraser") {
         clearCell(x, y);
+        recomputeIfSimulating();
         render();
         return;
       }
@@ -350,24 +960,16 @@
       const dir = document.getElementById("tool-dir").value;
       const orientation = document.getElementById("tool-orient").value;
 
-      if (activeTool === "emitter") {
-        level.emitters.push({ x, y, dir, color: activeColor });
-      } else if (activeTool === "target") {
-        level.targets.push({ x, y, color: activeColor });
-      } else if (activeTool === "obstacle") {
-        level.pieces.push({ type: "obstacle", x, y });
-      } else if (activeTool === "mirror") {
-        level.pieces.push({ type: "mirror", x, y, orientation, rotatable });
-      } else if (activeTool === "splitter") {
-        level.pieces.push({ type: "splitter", x, y, orientation, rotatable });
-      } else if (activeTool === "adder") {
-        level.pieces.push({ type: "adder", x, y, dir, rotatable });
-      }
+      if (activeTool === "emitter") level.emitters.push({ x, y, dir, color: activeColor });
+      else if (activeTool === "target") level.targets.push({ x, y, color: activeColor });
+      else if (activeTool === "obstacle") level.pieces.push({ type: "obstacle", x, y });
+      else if (activeTool === "mirror") level.pieces.push({ type: "mirror", x, y, orientation, rotatable });
+      else if (activeTool === "splitter") level.pieces.push({ type: "splitter", x, y, orientation, rotatable });
 
+      recomputeIfSimulating();
       render();
     }
 
-    // Canvas Events
     function getCellCoords(e) {
       const rect = canvas.getBoundingClientRect();
       const clientX = e.clientX - rect.left;
@@ -378,92 +980,150 @@
       return { x, y };
     }
 
+    canvas.addEventListener("mousemove", (e) => {
+      hoveredCell = getCellCoords(e);
+      render();
+    });
+    canvas.addEventListener("mouseleave", () => {
+      hoveredCell = null;
+      render();
+    });
     canvas.addEventListener("mousedown", (e) => {
       e.preventDefault();
       const { x, y } = getCellCoords(e);
       handleAction(x, y, e.button === 2 || e.button === 1);
     });
-
     canvas.addEventListener("contextmenu", e => e.preventDefault());
 
-    // Tool switching
-    document.querySelectorAll(".tool-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tool-btn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        activeTool = btn.dataset.tool;
-        syncToolUI();
-      });
+    function selectTool(toolName) {
+      activeTool = toolName;
+      document.querySelectorAll(".tool-btn").forEach(b => b.classList.toggle("active", b.dataset.tool === toolName));
+      syncToolUI();
+    }
+
+    function cycleColor() {
+      const nextIdx = (COLORS.indexOf(activeColor) + 1) % COLORS.length;
+      activeColor = COLORS[nextIdx];
+      document.querySelectorAll(".color-dot").forEach(d => d.classList.toggle("active", d.dataset.color === activeColor));
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener("keydown", (e) => {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName)) return;
+
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "o") {
+        e.preventDefault();
+        openDirectory();
+        return;
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        saveCurrentLevel();
+        return;
+      }
+      if (e.ctrlKey && e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        createNewLevel();
+        return;
+      }
+      if (e.key.toLowerCase() === "t") {
+        toggleSimulation();
+        return;
+      }
+
+      if (e.key === "1") selectTool("select");
+      if (e.key === "2") selectTool("eraser");
+      if (e.key === "3") selectTool("obstacle");
+      if (e.key === "4") selectTool("emitter");
+      if (e.key === "5") selectTool("target");
+      if (e.key === "6") selectTool("mirror");
+      if (e.key === "7") selectTool("splitter");
+
+      if (e.key.toLowerCase() === "c") cycleColor();
+
+      if (e.key === " " || e.key.toLowerCase() === "r") {
+        e.preventDefault();
+        if (hoveredCell) rotateAt(hoveredCell.x, hoveredCell.y);
+        else {
+          const dirSel = document.getElementById("tool-dir");
+          const dirs = ["up", "right", "down", "left"];
+          dirSel.value = dirs[(dirs.indexOf(dirSel.value) + 1) % dirs.length];
+          const orientSel = document.getElementById("tool-orient");
+          if (orientSel) orientSel.value = orientSel.value === "/" ? "\\" : (orientSel.value === "\\" ? "/" : (orientSel.value === "horizontal" ? "vertical" : "horizontal"));
+        }
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace" || e.key.toLowerCase() === "x") {
+        if (hoveredCell) {
+          clearCell(hoveredCell.x, hoveredCell.y);
+          recomputeIfSimulating();
+          render();
+        }
+      }
     });
 
-    // Color switching
-    document.querySelectorAll(".color-dot").forEach(dot => {
-      dot.addEventListener("click", () => {
-        document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("active"));
-        dot.classList.add("active");
-        activeColor = dot.dataset.color;
-      });
-    });
+    document.querySelectorAll(".tool-btn").forEach(btn => btn.addEventListener("click", () => selectTool(btn.dataset.tool)));
+    document.querySelectorAll(".color-dot").forEach(dot => dot.addEventListener("click", () => {
+      activeColor = dot.dataset.color;
+      document.querySelectorAll(".color-dot").forEach(d => d.classList.toggle("active", d.dataset.color === activeColor));
+    }));
 
-    // Dimension Inputs
     document.getElementById("grid-w").addEventListener("change", (e) => {
       level.grid.width = Math.max(3, parseInt(e.target.value) || 9);
+      recomputeIfSimulating();
       render();
     });
     document.getElementById("grid-h").addEventListener("change", (e) => {
       level.grid.height = Math.max(3, parseInt(e.target.value) || 9);
+      recomputeIfSimulating();
       render();
     });
 
-    // Clear
+    function syncLevelMeta() {
+      level.id = document.getElementById("meta-id").value;
+      level.title = document.getElementById("meta-title").value;
+      level.metadata = { description: document.getElementById("meta-desc").value };
+      level.rules.canPlaceOwnBlocks = document.getElementById("rule-place-blocks").checked;
+    }
+
+    function populateFromData(data) {
+      level = { ...level, ...data };
+      document.getElementById("meta-id").value = level.id || "level_1";
+      document.getElementById("meta-title").value = level.title || "Level 1";
+      document.getElementById("meta-desc").value = level.metadata?.description || "";
+      document.getElementById("grid-w").value = level.grid?.width || 9;
+      document.getElementById("grid-h").value = level.grid?.height || 9;
+      document.getElementById("rule-place-blocks").checked = Boolean(level.rules?.canPlaceOwnBlocks);
+      recomputeIfSimulating();
+      render();
+    }
+
+    function downloadBlob(content) {
+      const blob = new Blob([content], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${level.id || "level_1"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("btn-open-folder").addEventListener("click", openDirectory);
+    document.getElementById("btn-new-level").addEventListener("click", createNewLevel);
+    document.getElementById("btn-save").addEventListener("click", saveCurrentLevel);
+    document.getElementById("btn-download").addEventListener("click", () => {
+      syncLevelMeta();
+      downloadBlob(JSON.stringify(level, null, 2));
+    });
+
     document.getElementById("btn-clear").addEventListener("click", () => {
       if (confirm("Clear all pieces, targets, and emitters?")) {
         level.emitters = [];
         level.targets = [];
         level.pieces = [];
+        recomputeIfSimulating();
         render();
       }
-    });
-
-    // Export JSON
-    document.getElementById("btn-export").addEventListener("click", () => {
-      level.id = document.getElementById("meta-id").value;
-      level.title = document.getElementById("meta-title").value;
-      level.metadata = { description: document.getElementById("meta-desc").value };
-      level.rules.canPlaceOwnBlocks = document.getElementById("rule-place-blocks").checked;
-
-      const blob = new Blob([JSON.stringify(level, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${level.id || "level"}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    // Import JSON
-    const fileInput = document.getElementById("file-input");
-    document.getElementById("btn-import").addEventListener("click", () => fileInput.click());
-    fileInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target.result);
-          level = { ...level, ...data };
-          document.getElementById("meta-id").value = level.id || "level_custom";
-          document.getElementById("meta-title").value = level.title || "Custom Level";
-          document.getElementById("meta-desc").value = level.metadata?.description || "";
-          document.getElementById("grid-w").value = level.grid?.width || 9;
-          document.getElementById("grid-h").value = level.grid?.height || 9;
-          document.getElementById("rule-place-blocks").checked = Boolean(level.rules?.canPlaceOwnBlocks);
-          render();
-        } catch (err) {
-          alert("Invalid level JSON file.");
-        }
-      };
-      reader.readAsText(file);
     });
 
     syncToolUI();
