@@ -1,8 +1,8 @@
 import { Engine } from "./ecs/Engine";
 import GridRendererSystem from "./systems/GridRendererSystem";
 import InputManagerSystem from "./systems/InputManagerSystem";
-import HighscoreSystem from "./systems/HighscoreSystem";
-import LevelSystem from "./systems/LevelSystem";
+import {HighscoreSystem} from "./systems/HighscoreSystem";
+import {LevelSystem} from "./systems/LevelSystem";
 import { Entity } from "./ecs/Entity";
 import { EventComponent } from "./systems/components";
 
@@ -30,39 +30,23 @@ world.addEntitySystem(highs);
 // Level system and populate level select
 const levelSystem = new LevelSystem<any>();
 world.addEntitySystem(levelSystem);
+
 // Prepare level selection screen (buttons) on Start
 const titleScreen = document.querySelector("#title-screen") as HTMLElement | null;
 const levelScreen = document.querySelector("#level-screen") as HTMLElement | null;
 const gameScreenEl = document.querySelector("#game-screen") as HTMLElement | null;
 
-const startBtn = document.querySelector("#g-btn-start") as HTMLButtonElement | null;
+const startBtn = (document.querySelector("#btn-play") || document.querySelector("#g-btn-start")) as HTMLButtonElement | null;
 if (startBtn) {
 	startBtn.addEventListener("click", async () => {
 		// show level screen
 		if (titleScreen) titleScreen.classList.add("hidden");
 		if (levelScreen) levelScreen.classList.remove("hidden");
-		// populate buttons
-		const list = await levelSystem.loadList();
-		if (!levelScreen) return;
-		levelScreen.innerHTML = "";
-		for (const item of list) {
-			const btn = document.createElement("button");
-			btn.className = "btn-bold btn-basic large";
-			btn.textContent = item.title || item.id;
-			btn.dataset.levelId = item.id;
-			btn.addEventListener("click", () => {
-				// hide level screen, show game
-				if (levelScreen) levelScreen.classList.add("hidden");
-				if (gameScreenEl) gameScreenEl.classList.remove("hidden");
-				grid.resize();
-				// dispatch ui:load-level as an entity so LevelSystem handles it
-				const e = new Entity();
-				e.addComponent(new EventComponent("ui:load-level", { levelId: item.id }));
-				world.addEntity(e);
-			});
-			levelScreen.appendChild(btn);
-		}
+		
+		// Load level list and render 3x3 tabbed grid
+		await levelSystem.loadList();
+		levelSystem.renderLevelScreen();
 	});
 }
 
-engine.start(); 
+engine.start();

@@ -132,3 +132,86 @@ dialog {
   border-radius: 1rem;
   transform: skew(-4deg, 2deg);
 }
+
+/* 3x3 Tabbed Level Selection */
+.level-select-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+}
+
+.level-tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.level-tab-bar .btn.active {
+    outline: 2px solid #fff;
+}
+
+.level-grid-3x3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+.level-cell-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 72px;
+    padding: 8px 4px;
+    text-align: center;
+}
+
+.level-cell-btn .level-number {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.level-cell-btn .level-score {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    margin-top: 4px;
+}
+
+.level-footer {
+    margin-top: 8px;
+}
+
+/* Victory Screen Modal */
+.victory-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.victory-card {
+    background: #1e1e24;
+    color: #fff;
+    padding: 24px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 280px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.victory-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}

@@ -24,7 +24,7 @@
       <img class="icon" src="./css/maze.png" alt="LaserRay" />
     </div>
     <div class="button-box">
-      <button class="btn-bold btn-tertiary large" id="g-btn-start">
+      <button class="btn-bold btn-tertiary large" id="btn-play">
         Start Puzzle
       </button>
       <a class="btn-bold btn-basic large" href="https://stardance.hackclub.com/projects/45734">
@@ -43,31 +43,31 @@
       Complete Level
     </button>
     <dialog id="completion-dialog" class="completion-dialog">
-    <div class="dialog-content">
-      <h2 class="dialog-title">Level Complete!</h2>
+      <div class="dialog-content">
+        <h2 class="dialog-title">Level Complete!</h2>
 
-      <div class="dialog-stats">
-        <div class="stat-row">
-          <span>Time:</span>
-          <strong id="completion-current-time">00:00.00</strong>
+        <div class="dialog-stats">
+          <div class="stat-row">
+            <span>Time:</span>
+            <strong id="completion-current-time">00:00.00</strong>
+          </div>
+          <div class="stat-row">
+            <span>Highscore:</span>
+            <strong id="completion-best-time">00:00.00</strong>
+          </div>
+          <div id="completion-new-record" class="new-record-banner hidden">
+            ★ NEW BEST TIME! ★
+          </div>
         </div>
-        <div class="stat-row">
-          <span>Highscore:</span>
-          <strong id="completion-best-time">00:00.00</strong>
-        </div>
-        <div id="completion-new-record" class="new-record-banner hidden">
-          ★ NEW BEST TIME! ★
+
+        <!-- Action buttons below stats -->
+        <div class="dialog-actions">
+          <button id="completion-btn-menu" class="btn-bold btn-secondary">Levels</button>
+          <button id="completion-btn-retry" class="btn-bold btn-secondary">Retry</button>
+          <button id="completion-btn-finish" class="btn-bold btn-primary">Next Level</button>
         </div>
       </div>
-
-      <!-- Action buttons below stats -->
-      <div class="dialog-actions">
-        <button id="completion-btn-menu" class="btn-bold btn-secondary">Levels</button>
-        <button id="completion-btn-retry" class="btn-bold btn-secondary">Retry</button>
-        <button id="completion-btn-finish" class="btn-bold btn-primary">Next Level</button>
-      </div>
-    </div>
-  </dialog>
+    </dialog>
   </main>
   <footer>© Jonas Gaden / 2026</footer>
 </body>
