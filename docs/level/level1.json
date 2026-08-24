@@ -1,0 +1,15 @@
+{
+  "id": "level1",
+  "title": "Mirror Turn",
+  "grid": { "width": 5, "height": 5 },
+  "emitters": [
+    { "x": 1, "y": 2, "dir": "right", "color": "red" }
+  ],
+  "pieces": [
+    { "type": "mirror", "x": 3, "y": 2, "orientation": "/", "rotatable": true }
+  ],
+  "targets": [
+    { "x": 3, "y": 3, "color": "red" }
+  ],
+  "metadata": { "description": "Click the mirror to redirect the red beam upward." }
+}

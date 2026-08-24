@@ -1,4 +1,14 @@
-export type LightColor = "red" | "green" | "blue" | "yellow" | "purple" | "cyan" | "white";
+export type LightColor =
+    | "red"
+    | "orange"
+    | "yellow"
+    | "lime"
+    | "green"
+    | "cyan"
+    | "blue"
+    | "purple"
+    | "white";
+
 export type Direction = "up" | "right" | "down" | "left";
 
 export type Emitter = { x: number; y: number; dir: Direction; color: LightColor };
@@ -76,14 +86,18 @@ export type LaserSimulationResult = {
 };
 
 const DIRECTION_ORDER: Direction[] = ["up", "right", "down", "left"];
+
+// 4-bit Channel Bitmask: [Yellow (8), Blue (4), Green (2), Red (1)]
 const COLOR_MASKS: Record<LightColor, number> = {
-    red: 1,
-    green: 2,
-    yellow: 3,
-    blue: 4,
-    purple: 5,
-    cyan: 6,
-    white: 7,
+    red: 1,      // 0001
+    green: 2,    // 0010
+    blue: 4,     // 0100
+    yellow: 8,   // 1000
+    orange: 9,   // 1001 (Red + Yellow)
+    lime: 10,    // 1010 (Green + Yellow)
+    purple: 5,   // 0101 (Red + Blue)
+    cyan: 6,     // 0110 (Green + Blue)
+    white: 7,    // 0111 (Red + Green + Blue) / 1111
 };
 
 const DELTA_BY_DIRECTION: Record<Direction, { x: number; y: number }> = {
@@ -126,14 +140,24 @@ function colorToMask(color: LightColor): number {
 }
 
 function maskToColor(mask: number): LightColor | undefined {
-    if (mask === 1) return "red";
-    if (mask === 2) return "green";
-    if (mask === 3) return "yellow";
-    if (mask === 4) return "blue";
-    if (mask === 5) return "purple";
-    if (mask === 6) return "cyan";
-    if (mask === 7) return "white";
-    return undefined;
+    switch (mask) {
+        case 1: return "red";
+        case 2: return "green";
+        case 3: return "yellow";    // Additive Red + Green produces Yellow
+        case 4: return "blue";
+        case 5: return "purple";    // Red + Blue
+        case 6: return "cyan";      // Green + Blue
+        case 7: return "white";     // Red + Green + Blue
+        case 8: return "yellow";
+        case 9: return "orange";    // Red + Yellow
+        case 10: return "lime";     // Green + Yellow
+        case 11: return "orange";   // Red + Green + Yellow
+        case 12: return "cyan";     // Blue + Yellow
+        case 13: return "purple";   // Red + Blue + Yellow
+        case 14: return "cyan";     // Green + Blue + Yellow
+        case 15: return "white";    // All channels
+        default: return undefined;
+    }
 }
 
 export function mixLightColors(colors: LightColor[]): LightColor | undefined {
@@ -219,15 +243,8 @@ export function simulateLaserLevel(
             segments.push({ x1: beam.x, y1: beam.y, x2: nx, y2: ny, color: beam.color });
             pushCellHit(nx, ny, beam.color);
 
-            // Targets are solid: record hit and terminate ray
-            if (targetByCell.has(nextCellKey)) {
-                continue;
-            }
-
-            // Emitters are solid: incoming rays are blocked
-            if (emitterByCell.has(nextCellKey)) {
-                continue;
-            }
+            if (targetByCell.has(nextCellKey)) continue;
+            if (emitterByCell.has(nextCellKey)) continue;
 
             const stateKey = `${nx},${ny},${beam.dir},${beam.color}`;
             const seen = stateCounts.get(stateKey) ?? 0;
@@ -240,10 +257,7 @@ export function simulateLaserLevel(
                 continue;
             }
 
-            // Obstacles are solid: terminate ray
-            if (piece.type === "obstacle") {
-                continue;
-            }
+            if (piece.type === "obstacle") continue;
 
             if (piece.type === "mirror") {
                 queue.push({ x: nx, y: ny, dir: reflect(beam.dir, piece.orientation), color: beam.color });

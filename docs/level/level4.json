@@ -1,0 +1,88 @@
+{
+  "id": "level4",
+  "title": "Light Maze",
+  "grid": {
+    "width": 5,
+    "height": 5
+  },
+  "emitters": [
+    {
+      "x": 4,
+      "y": 0,
+      "dir": "left",
+      "color": "red"
+    }
+  ],
+  "targets": [
+    {
+      "x": 0,
+      "y": 4,
+      "color": "red"
+    }
+  ],
+  "pieces": [
+    {
+      "type": "obstacle",
+      "x": 1,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 2,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 2,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 1,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 0,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 1
+    }
+  ],
+  "rules": {
+    "canPlaceOwnBlocks": true,
+    "blockCycle": [
+      null,
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "/",
+        "rotatable": true
+      },
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "\\",
+        "rotatable": true
+      }
+    ]
+  },
+  "metadata": {
+    "description": "Find a way through the maze"
+  }
+}

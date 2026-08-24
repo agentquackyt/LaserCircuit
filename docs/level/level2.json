@@ -1,0 +1,81 @@
+{
+  "id": "level2",
+  "title": "Split Beam",
+  "grid": {
+    "width": 5,
+    "height": 5
+  },
+  "emitters": [
+    {
+      "x": 2,
+      "y": 0,
+      "dir": "down",
+      "color": "green"
+    }
+  ],
+  "targets": [
+    {
+      "x": 0,
+      "y": 2,
+      "color": "green"
+    },
+    {
+      "x": 4,
+      "y": 2,
+      "color": "green"
+    }
+  ],
+  "pieces": [
+    {
+      "type": "splitter",
+      "x": 2,
+      "y": 1,
+      "orientation": "horizontal",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 0,
+      "y": 1,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 4,
+      "y": 1,
+      "orientation": "/",
+      "rotatable": true
+    }
+  ],
+  "rules": {
+    "canPlaceOwnBlocks": false,
+    "blockCycle": [
+      null,
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "/",
+        "rotatable": true
+      },
+      {
+        "type": "mirror",
+        "x": 0,
+        "y": 0,
+        "orientation": "\\",
+        "rotatable": true
+      },
+      {
+        "type": "splitter",
+        "x": 0,
+        "y": 0,
+        "orientation": "horizontal",
+        "rotatable": true
+      }
+    ]
+  },
+  "metadata": {
+    "description": "Rotate the splitter so the beam forks left and right."
+  }
+}

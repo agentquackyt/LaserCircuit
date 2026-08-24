@@ -143,16 +143,17 @@
     .tool-btn span.icon { font-size: 1.05rem; font-family: monospace; font-weight: bold; }
 
     /* Color Dot Picker */
-    .color-picker { display: flex; gap: 6px; }
+    .color-picker { display: flex; gap: 5px; flex-wrap: wrap; }
     .color-dot {
-      flex: 1;
+      flex: 1 0 calc(11% - 5px);
+      min-width: 22px;
       height: 22px;
       border-radius: 4px;
       cursor: pointer;
       border: 2px solid transparent;
       transition: transform 0.15s;
     }
-    .color-dot.active { border-color: #fff; transform: scale(1.1); }
+    .color-dot.active { border-color: #fff; transform: scale(1.15); }
 
     /* Actions */
     .btn-row { display: flex; gap: 6px; }
@@ -277,12 +278,15 @@
       <div id="color-selector-wrap">
         <label style="margin-bottom: 4px;">Color <kbd style="align-self: flex-end;">C</kbd></label>
         <div class="color-picker">
-          <div class="color-dot active" data-color="red" style="background: #ff4b4b;"></div>
-          <div class="color-dot" data-color="green" style="background: #4dff88;"></div>
-          <div class="color-dot" data-color="blue" style="background: #4da3ff;"></div>
-          <div class="color-dot" data-color="yellow" style="background: #ffe45c;"></div>
-          <div class="color-dot" data-color="purple" style="background: #d56bff;"></div>
-          <div class="color-dot" data-color="cyan" style="background: #62f5ff;"></div>
+          <div class="color-dot active" data-color="red" style="background: #ff4b4b;" title="Red"></div>
+          <div class="color-dot" data-color="orange" style="background: #ff8c3a;" title="Orange"></div>
+          <div class="color-dot" data-color="yellow" style="background: #ffe45c;" title="Yellow"></div>
+          <div class="color-dot" data-color="lime" style="background: #b4ff3a;" title="Lime"></div>
+          <div class="color-dot" data-color="green" style="background: #4dff88;" title="Green"></div>
+          <div class="color-dot" data-color="cyan" style="background: #62f5ff;" title="Cyan"></div>
+          <div class="color-dot" data-color="blue" style="background: #4da3ff;" title="Blue"></div>
+          <div class="color-dot" data-color="purple" style="background: #d56bff;" title="Purple"></div>
+          <div class="color-dot" data-color="white" style="background: #ffffff;" title="White"></div>
         </div>
       </div>
 
@@ -368,18 +372,31 @@
     let activeFileHandle = null;
     let folderFiles = new Map(); // name -> FileSystemFileHandle
 
-    const COLORS = ["red", "green", "blue", "yellow", "purple", "cyan"];
+    const COLORS = ["red", "orange", "yellow", "lime", "green", "cyan", "blue", "purple", "white"];
     const COLOR_MAP = {
       red: "#ff4b4b",
-      green: "#4dff88",
-      blue: "#4da3ff",
+      orange: "#ff8c3a",
       yellow: "#ffe45c",
-      purple: "#d56bff",
+      lime: "#b4ff3a",
+      green: "#4dff88",
       cyan: "#62f5ff",
+      blue: "#4da3ff",
+      purple: "#d56bff",
       white: "#ffffff"
     };
 
-    const COLOR_MASKS = { red: 1, green: 2, yellow: 3, blue: 4, purple: 5, cyan: 6, white: 7 };
+    const COLOR_MASKS = {
+      red: 1,
+      green: 2,
+      blue: 4,
+      yellow: 8,
+      orange: 9,
+      lime: 10,
+      purple: 5,
+      cyan: 6,
+      white: 7
+    };
+
     const DELTA_BY_DIRECTION = {
       up: { x: 0, y: -1 },
       right: { x: 1, y: 0 },
@@ -475,7 +492,7 @@
         activeFileHandle = handle;
         const file = await handle.getFile();
         const text = await file.text();
-        populateFromData(JSON.parse(text), filename);
+        populateFromData(JSON.parse(text));
         refreshFolderList();
         showToast(`Loaded ${filename}`);
       } catch (err) {
@@ -488,7 +505,6 @@
       syncLevelMeta();
       const content = JSON.stringify(level, null, 2);
 
-      // If already linked to a folder file
       if (activeFileHandle && directoryHandle) {
         try {
           const writable = await activeFileHandle.createWritable();
@@ -501,7 +517,6 @@
         }
       }
 
-      // If folder is open but file not yet saved
       if (directoryHandle) {
         try {
           const fileName = `${level.id || "level"}.json`;
@@ -517,7 +532,6 @@
         }
       }
 
-      // Standalone Fallback using Save File Picker
       if (window.showSaveFilePicker) {
         try {
           activeFileHandle = await window.showSaveFilePicker({
@@ -559,21 +573,31 @@
         metadata: { description: "Direct light beams into targets." }
       };
       activeFileHandle = null;
-      populateFromData(level, null);
+      populateFromData(level);
       if (directoryHandle) refreshFolderList();
       showToast(`Created ${nextId}`);
     }
 
     // Simulation Engine
     function maskToColor(mask) {
-      if (mask === 1) return "red";
-      if (mask === 2) return "green";
-      if (mask === 3) return "yellow";
-      if (mask === 4) return "blue";
-      if (mask === 5) return "purple";
-      if (mask === 6) return "cyan";
-      if (mask === 7) return "white";
-      return undefined;
+      switch (mask) {
+        case 1: return "red";
+        case 2: return "green";
+        case 3: return "yellow";
+        case 4: return "blue";
+        case 5: return "purple";
+        case 6: return "cyan";
+        case 7: return "white";
+        case 8: return "yellow";
+        case 9: return "orange";
+        case 10: return "lime";
+        case 11: return "orange";
+        case 12: return "cyan";
+        case 13: return "purple";
+        case 14: return "cyan";
+        case 15: return "white";
+        default: return undefined;
+      }
     }
 
     function mixColors(colors) {
