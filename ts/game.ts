@@ -66,10 +66,3 @@ if (startBtn) {
 }
 
 engine.start(); 
-
-// Load a test level immediately for quick verification
-{
-	const test = new Entity();
-	test.addComponent(new EventComponent("ui:load-level", { levelId: "level1" }));
-	world.addEntity(test);
-}

@@ -10,18 +10,16 @@ import {
 	type LaserPiece,
 	type LaserSimulationResult,
 	type LightColor,
-	type MirrorPiece,
-	type SplitterPiece,
 	type Target,
 } from "../utils/LaserLogic";
 
 const DEFAULT_GRID_SIZE = 9;
 const DEFAULT_BLOCK_CYCLE: Array<LaserPiece | null> = [
-	null,
-	{ type: "mirror", x: 0, y: 0, orientation: "/", rotatable: true },
-	{ type: "mirror", x: 0, y: 0, orientation: "\\", rotatable: true },
-	{ type: "splitter", x: 0, y: 0, orientation: "horizontal", rotatable: true },
-	{ type: "splitter", x: 0, y: 0, orientation: "vertical", rotatable: true },
+    null,
+    { type: "mirror", x: 0, y: 0, orientation: "/", rotatable: true },
+    { type: "mirror", x: 0, y: 0, orientation: "\\", rotatable: true },
+    { type: "splitter", x: 0, y: 0, orientation: "horizontal", rotatable: true },
+    { type: "splitter", x: 0, y: 0, orientation: "vertical", rotatable: true },
 ];
 
 type GridLayout = {
@@ -112,7 +110,9 @@ export class GridRendererSystem extends TickSystem {
 		this.height = Math.max(1, Math.floor(data?.grid?.height ?? DEFAULT_GRID_SIZE));
 		this.emitters = Array.isArray(data?.emitters) ? data!.emitters : [];
 		this.targets = Array.isArray(data?.targets) ? data!.targets : [];
-		this.pieces = Array.isArray(data?.pieces) ? data!.pieces.map((piece) => this.normalizePiece(piece)).filter(Boolean) as LaserPiece[] : [];
+		this.pieces = Array.isArray(data?.pieces)
+			? (data!.pieces.map((piece) => this.normalizePiece(piece)).filter(Boolean) as LaserPiece[])
+			: [];
 		this.levelPieceCells = new Set(this.pieces.map((piece) => this.cellKey(piece.x, piece.y)));
 		this.canPlaceOwnBlocks = Boolean(data?.rules?.canPlaceOwnBlocks);
 		this.blockCycle = this.normalizeBlockCycle(data?.rules?.blockCycle);
@@ -130,8 +130,7 @@ export class GridRendererSystem extends TickSystem {
 
 	private normalizeBlockCycle(cycle?: Array<LaserPiece | null>): Array<LaserPiece | null> {
 		if (!cycle || cycle.length === 0) return DEFAULT_BLOCK_CYCLE;
-		const normalized = cycle
-			.map((entry) => (entry ? this.normalizePiece(entry) : null));
+		const normalized = cycle.map((entry) => (entry ? this.normalizePiece(entry) : null));
 		return normalized.length > 0 ? normalized : DEFAULT_BLOCK_CYCLE;
 	}
 
@@ -168,11 +167,20 @@ export class GridRendererSystem extends TickSystem {
 		if (typeof canvasX !== "number" || typeof canvasY !== "number") return;
 		const cell = this.canvasToCell(canvasX, canvasY);
 		if (!cell) return;
+
+		// Cannot cycle or rotate inside emitter, target, or obstacle cells
+		const isEmitter = this.emitters.some((e) => e.x === cell.x && e.y === cell.y);
+		const isTarget = this.targets.some((t) => t.x === cell.x && t.y === cell.y);
+		const isObstacle = this.pieces.some((p) => p.x === cell.x && p.y === cell.y && p.type === "obstacle");
+		if (isEmitter || isTarget || isObstacle) return;
+
 		if (this.canPlaceOwnBlocks && button === 0) {
 			this.cycleCell(cell.x, cell.y);
 			return;
 		}
-		const idx = this.pieces.findIndex((piece) => piece.x === cell.x && piece.y === cell.y && piece.rotatable !== false);
+		const idx = this.pieces.findIndex(
+			(piece) => piece.x === cell.x && piece.y === cell.y && piece.type !== "obstacle" && piece.rotatable !== false
+		);
 		if (idx < 0) return;
 		const piece = this.pieces[idx];
 		if (!piece) return;
@@ -223,6 +231,7 @@ export class GridRendererSystem extends TickSystem {
 		if (piece.type === "mirror") return `mirror:${piece.orientation}`;
 		if (piece.type === "splitter") return `splitter:${piece.orientation}`;
 		if (piece.type === "adder") return `adder:${piece.dir}`;
+		if (piece.type === "obstacle") return "obstacle";
 		return "splitter:horizontal";
 	}
 
@@ -267,7 +276,6 @@ export class GridRendererSystem extends TickSystem {
 			for (let x = 0; x < cols; x++) {
 				const px = originX + this.padding + x * (cellW + this.padding);
 				const py = originY + this.padding + y * (cellH + this.padding);
-				ctx.beginPath();
 				this.roundRect(ctx, px, py, cellW, cellH, this.radius);
 				ctx.fillStyle = "#424956";
 				ctx.fill();
@@ -278,6 +286,7 @@ export class GridRendererSystem extends TickSystem {
 		}
 
 		this.renderBeams(originX, originY, cellW, cellH);
+		this.renderObstacles(originX, originY, cellW, cellH);
 		this.renderTargets(originX, originY, cellW, cellH);
 		this.renderPieces(originX, originY, cellW, cellH);
 		this.renderEmitters(originX, originY, cellW, cellH);
@@ -292,7 +301,6 @@ export class GridRendererSystem extends TickSystem {
 		ctx.shadowBlur = 28;
 		ctx.shadowOffsetY = 12;
 		ctx.fillStyle = "#2b313c";
-		ctx.beginPath();
 		this.roundRect(ctx, originX - frameInset, originY - frameInset, gridW + frameInset * 2, gridH + frameInset * 2, frameRadius);
 		ctx.fill();
 		ctx.restore();
@@ -300,20 +308,44 @@ export class GridRendererSystem extends TickSystem {
 		ctx.save();
 		ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
 		ctx.lineWidth = 1;
-		ctx.beginPath();
 		this.roundRect(ctx, originX - frameInset + 1, originY - frameInset + 1, gridW + frameInset * 2 - 2, gridH + frameInset * 2 - 2, frameRadius - 1);
 		ctx.stroke();
 		ctx.restore();
+	}
+
+	private renderObstacles(originX: number, originY: number, cellW: number, cellH: number) {
+		const ctx = this.ctx;
+		const obstacles = this.pieces.filter((p): p is { type: "obstacle"; x: number; y: number } => p.type === "obstacle");
+
+		for (const obs of obstacles) {
+			const px = originX + this.padding + obs.x * (cellW + this.padding);
+			const py = originY + this.padding + obs.y * (cellH + this.padding);
+
+			ctx.save();
+			this.roundRect(ctx, px-2, py-2, cellW+4, cellH+4, this.radius);
+			// Re-render identical to the grid background tile over rays
+			ctx.fillStyle = "#2b313c";
+			ctx.fill();
+
+			ctx.strokeStyle = "rgba(255, 255, 255, 0.10)";
+			ctx.lineWidth = 1;
+			ctx.stroke();
+			ctx.restore();
+		}
 	}
 
 	private renderBeams(originX: number, originY: number, cellW: number, cellH: number) {
 		if (!this.simulation) return;
 		const ctx = this.ctx;
 		const mixBySegment = new Map<string, { x1: number; y1: number; x2: number; y2: number; mask: number; count: number }>();
+
 		for (const segment of this.simulation.segments) {
-			// Keep direction in the segment key so opposite-traveling beams do not
-			// incorrectly blend into a single color on the same edge.
-			const key = `${segment.x1},${segment.y1},${segment.x2},${segment.y2}`;
+			const [x1, y1, x2, y2] =
+				segment.x1 < segment.x2 || (segment.x1 === segment.x2 && segment.y1 <= segment.y2)
+					? [segment.x1, segment.y1, segment.x2, segment.y2]
+					: [segment.x2, segment.y2, segment.x1, segment.y1];
+
+			const key = `${x1},${y1},${x2},${y2}`;
 			const existing = mixBySegment.get(key);
 			if (existing) {
 				existing.mask |= this.lightColorMask(segment.color);
@@ -321,10 +353,10 @@ export class GridRendererSystem extends TickSystem {
 				continue;
 			}
 			mixBySegment.set(key, {
-				x1: segment.x1,
-				y1: segment.y1,
-				x2: segment.x2,
-				y2: segment.y2,
+				x1,
+				y1,
+				x2,
+				y2,
 				mask: this.lightColorMask(segment.color),
 				count: 1,
 			});
@@ -373,11 +405,14 @@ export class GridRendererSystem extends TickSystem {
 		ctx.textBaseline = "middle";
 
 		for (const piece of this.pieces) {
+			if (piece.type === "obstacle") continue;
+
+			ctx.save();
 			const cx = this.centerX(piece.x, originX, cellW);
 			const cy = this.centerY(piece.y, originY, cellH);
 			const accent = this.pieceAccentColor(piece);
 			const glyph = this.pieceGlyph(piece);
-			
+
 			ctx.fillStyle = accent;
 			ctx.fillText(glyph, cx, cy + 1);
 
@@ -386,7 +421,6 @@ export class GridRendererSystem extends TickSystem {
 				ctx.fillStyle = "rgba(255,255,255,0.82)";
 				ctx.font = `700 ${Math.max(10, Math.floor(Math.min(cellW, cellH) * 0.22))}px "Consolas", "Courier New", monospace`;
 				ctx.fillText(this.dirSymbol(piece.dir), cx + cellW * 0.18, cy - cellH * 0.16);
-				ctx.font = `700 ${Math.max(16, Math.floor(Math.min(cellW, cellH) * 0.72))}px "Consolas", "Courier New", monospace`;
 			}
 			ctx.restore();
 		}
@@ -401,13 +435,14 @@ export class GridRendererSystem extends TickSystem {
 			ctx.shadowColor = this.toCssColor(emitter.color);
 			ctx.shadowBlur = 5;
 			ctx.fillStyle = this.toCssColor(emitter.color);
-			ctx.beginPath();
 			this.roundRect(ctx, cx - cellW * 0.4, cy - cellH * 0.4, cellW * 0.8, cellH * 0.8, Math.min(cellW, cellH) * 0.2);
 			ctx.fill();
+
 			ctx.shadowBlur = 0;
 			ctx.strokeStyle = "rgba(255,255,255,0.45)";
 			ctx.lineWidth = 1.5;
 			ctx.stroke();
+
 			ctx.fillStyle = "#dbdbdb";
 			ctx.font = `${Math.max(20, Math.floor(Math.min(cellW, cellH) * 0.5))}px "Google Sans", sans-serif`;
 			ctx.textAlign = "center";
@@ -424,21 +459,26 @@ export class GridRendererSystem extends TickSystem {
 			const y = originY + this.padding + target.y * (cellH + this.padding);
 			const colorSeen = this.simulation?.targetColors.get(`${target.x},${target.y}`);
 			const hit = colorSeen === target.color;
+
 			ctx.save();
 			ctx.shadowColor = this.toCssColor(target.color);
 			ctx.shadowBlur = hit ? 16 : 8;
+
+			this.roundRect(ctx, x + 4, y + 4, cellW - 8, cellH - 8, Math.min(cellW, cellH) * 0.15);
 			ctx.fillStyle = colorSeen ? this.toCssColor(colorSeen) : "#262c35";
 			ctx.globalAlpha = colorSeen ? (hit ? 0.28 : 0.16) : 0.96;
-			this.roundRect(ctx, x + 4, y + 4, cellW - 8, cellH - 8, Math.min(cellW, cellH) * 0.15);
 			ctx.fill();
+
 			ctx.globalAlpha = 1;
 			ctx.strokeStyle = this.toCssColor(target.color);
 			ctx.lineWidth = hit ? 3 : 2;
 			ctx.stroke();
-			ctx.fillStyle = this.toCssColor(target.color);
+
 			ctx.beginPath();
-			ctx.arc(x + cellW / 2, y + cellH / 2, Math.min(cellW, cellH) * 0.12, 0, Math.PI * 2);
+			ctx.fillStyle = this.toCssColor(target.color);
+			ctx.arc(x + cellW / 2, y + cellH / 2, Math.min(cellW, cellH) * 0.14, 0, Math.PI * 2);
 			ctx.fill();
+
 			ctx.restore();
 		}
 	}
@@ -471,10 +511,9 @@ export class GridRendererSystem extends TickSystem {
 
 	private pieceAccentColor(piece: LaserPiece): string {
 		if (piece.type === "mirror") return "#68a9ff";
-		if (piece.type === "splitter") return "#58ffd0" ;
+		if (piece.type === "splitter") return "#58ffd0";
 		return "#ffffff";
 	}
-
 
 	private centerX(x: number, originX: number, cellW: number): number {
 		return originX + this.padding + x * (cellW + this.padding) + cellW / 2;
@@ -503,6 +542,7 @@ export class GridRendererSystem extends TickSystem {
 
 	private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
 		const radius = Math.min(r, w / 2, h / 2);
+		ctx.beginPath();
 		ctx.moveTo(x + radius, y);
 		ctx.arcTo(x + w, y, x + w, y + h, radius);
 		ctx.arcTo(x + w, y + h, x, y + h, radius);

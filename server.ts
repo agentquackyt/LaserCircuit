@@ -1,9 +1,11 @@
 import indexHtml from "./index.html";
+import editorHtml from "./editor.html";
 
 Bun.serve({
     port: 3000,
     routes: {
         "/": indexHtml,
+        "/editor": editorHtml
     },
     async fetch(req, server) {
         const url = new URL(req.url);

@@ -11,7 +11,7 @@ export class LevelSystem<T = unknown> extends EntitySystem {
     public currentLevelId?: string;
     public currentLevel?: T;
 
-    private storageKey = "last_level";
+    private storageKey = "laser.last_level";
 
     constructor() {
         super();

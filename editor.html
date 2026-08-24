@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Laser Level Editor</title>
+  <style>
+    :root {
+      --bg: #1a1d24;
+      --panel: #262c37;
+      --card: #313846;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+    
+    #sidebar { width: 380px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; padding: 18px; gap: 16px; }
+    #viewport { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: radial-gradient(circle at center, #242b38 0%, #15181e 100%); }
+    
+    h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; color: #fff; }
+    .section { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+    .section-title { font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; }
+    
+    .grid-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .grid-row:last-child { margin-bottom: 0; }
+    label { font-size: 0.8rem; display: flex; flex-direction: column; gap: 4px; flex: 1; color: var(--text-dim); }
+    input[type="text"], input[type="number"], textarea, select {
+      background: #1e232d; border: 1px solid var(--border); color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 0.85rem; outline: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; height: 50px; }
+
+    /* Palette Tools */
+    .palette-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .tool-btn {
+      background: #1e232d; border: 1px solid var(--border); color: var(--text); padding: 8px 4px;
+      border-radius: 6px; font-size: 0.75rem; cursor: pointer; text-align: center; display: flex;
+      flex-direction: column; align-items: center; gap: 4px; transition: all 0.15s ease;
+    }
+    .tool-btn:hover { background: #2a313d; }
+    .tool-btn.active { border-color: var(--accent); background: rgba(59, 130, 246, 0.15); color: #fff; }
+    .tool-btn span.icon { font-size: 1.1rem; font-family: monospace; font-weight: bold; }
+
+    /* Color picker buttons */
+    .color-picker { display: flex; gap: 6px; }
+    .color-dot {
+      flex: 1; height: 26px; border-radius: 4px; cursor: pointer; border: 2px solid transparent;
+      display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;
+    }
+    .color-dot.active { border-color: #fff; transform: scale(1.05); }
+
+    /* Action Buttons */
+    .btn-row { display: flex; gap: 8px; }
+    button.btn {
+      flex: 1; background: var(--accent); border: none; color: #fff; padding: 9px;
+      border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    }
+    button.btn:hover { background: var(--accent-hover); }
+    button.btn-secondary { background: #3f4756; }
+    button.btn-secondary:hover { background: #4b5568; }
+    button.btn-danger { background: #dc2626; }
+    button.btn-danger:hover { background: #b91c1c; }
+
+    canvas { border-radius: 12px; box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4); cursor: crosshair; }
+    .hints { font-size: 0.75rem; color: var(--text-dim); text-align: center; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar">
+    <h2>Level Designer</h2>
+
+    <!-- Metadata -->
+    <div class="section">
+      <div class="section-title">Level Meta</div>
+      <div class="grid-row">
+        <label>ID <input type="text" id="meta-id" value="level_custom" /></label>
+        <label>Title <input type="text" id="meta-title" value="My Custom Level" /></label>
+      </div>
+      <div class="grid-row">
+        <label>Width <input type="number" id="grid-w" min="3" max="15" value="9" /></label>
+        <label>Height <input type="number" id="grid-h" min="3" max="15" value="9" /></label>
+      </div>
+      <label style="margin-top: 6px;">Description
+        <textarea id="meta-desc">Solve the light puzzle.</textarea>
+      </label>
+    </div>
+
+    <!-- Active Tool Configuration -->
+    <div class="section">
+      <div class="section-title">Tool Type</div>
+      <div class="palette-grid">
+        <button class="tool-btn active" data-tool="select"><span class="icon">↖</span>Select / Move</button>
+        <button class="tool-btn" data-tool="eraser"><span class="icon">⌫</span>Erase</button>
+        <button class="tool-btn" data-tool="obstacle"><span class="icon">⬛</span>Obstacle</button>
+        <button class="tool-btn" data-tool="emitter"><span class="icon">⮞</span>Emitter</button>
+        <button class="tool-btn" data-tool="target"><span class="icon">◎</span>Target</button>
+        <button class="tool-btn" data-tool="mirror"><span class="icon">╱</span>Mirror</button>
+        <button class="tool-btn" data-tool="splitter"><span class="icon">+</span>Splitter</button>
+        <button class="tool-btn" data-tool="adder"><span class="icon">#</span>Adder</button>
+      </div>
+    </div>
+
+    <!-- Tool Parameters -->
+    <div class="section" id="tool-options">
+      <div class="section-title">Tool Options</div>
+      
+      <div id="color-selector-wrap" style="margin-bottom: 10px;">
+        <label style="margin-bottom: 6px;">Color</label>
+        <div class="color-picker">
+          <div class="color-dot active" data-color="red" style="background: #ff4b4b;"></div>
+          <div class="color-dot" data-color="green" style="background: #4dff88;"></div>
+          <div class="color-dot" data-color="blue" style="background: #4da3ff;"></div>
+          <div class="color-dot" data-color="yellow" style="background: #ffe45c; color: #000;"></div>
+          <div class="color-dot" data-color="purple" style="background: #d56bff;"></div>
+          <div class="color-dot" data-color="cyan" style="background: #62f5ff; color: #000;"></div>
+        </div>
+      </div>
+
+      <div class="grid-row">
+        <label id="dir-wrap">Direction
+          <select id="tool-dir">
+            <option value="right">Right (⇨)</option>
+            <option value="down">Down (⇩)</option>
+            <option value="left">Left (⇦)</option>
+            <option value="up">Up (⇧)</option>
+          </select>
+        </label>
+        <label id="orient-wrap" style="display:none;">Orientation
+          <select id="tool-orient">
+            <option value="/">Diagonal /</option>
+            <option value="\">Diagonal \</option>
+            <option value="horizontal">Horizontal</option>
+            <option value="vertical">Vertical</option>
+          </select>
+        </label>
+      </div>
+      <label style="flex-direction: row; align-items: center; gap: 8px; margin-top: 8px;" id="rotatable-wrap">
+        <input type="checkbox" id="tool-rotatable" checked /> Player Rotatable
+      </label>
+    </div>
+
+    <!-- Rules -->
+    <div class="section">
+      <div class="section-title">Level Rules</div>
+      <label style="flex-direction: row; align-items: center; gap: 8px;">
+        <input type="checkbox" id="rule-place-blocks" checked /> canPlaceOwnBlocks
+      </label>
+    </div>
+
+    <!-- Import / Export Actions -->
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btn-import">Import JSON</button>
+      <button class="btn" id="btn-export">Export JSON</button>
+    </div>
+    <button class="btn btn-danger" id="btn-clear">Clear Grid</button>
+
+    <input type="file" id="file-input" style="display: none;" accept=".json" />
+  </div>
+
+  <div id="viewport">
+    <canvas id="canvas" width="620" height="620"></canvas>
+    <div class="hints">Left-Click: Place/Select &bull; Right-Click: Rotate/Cycle &bull; Middle-Click: Delete</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Level Model
+    let level = {
+      id: "level_custom",
+      title: "My Custom Level",
+      grid: { width: 9, height: 9 },
+      emitters: [],
+      targets: [],
+      pieces: [],
+      rules: {
+        canPlaceOwnBlocks: true,
+        blockCycle: [
+          null,
+          { type: "mirror", x: 0, y: 0, orientation: "/", rotatable: true },
+          { type: "mirror", x: 0, y: 0, orientation: "\\", rotatable: true }
+        ]
+      },
+      metadata: { description: "Solve the light puzzle." }
+    };
+
+    let activeTool = "select";
+    let activeColor = "red";
+    const padding = 6;
+    const radius = 6;
+
+    const COLOR_MAP = {
+      red: "#ff4b4b",
+      green: "#4dff88",
+      blue: "#4da3ff",
+      yellow: "#ffe45c",
+      purple: "#d56bff",
+      cyan: "#62f5ff",
+      white: "#ffffff"
+    };
+
+    function syncToolUI() {
+      const colorWrap = document.getElementById("color-selector-wrap");
+      const dirWrap = document.getElementById("dir-wrap");
+      const orientWrap = document.getElementById("orient-wrap");
+      const orientSel = document.getElementById("tool-orient");
+      const rotWrap = document.getElementById("rotatable-wrap");
+
+      colorWrap.style.display = (activeTool === "emitter" || activeTool === "target") ? "block" : "none";
+      dirWrap.style.display = (activeTool === "emitter" || activeTool === "adder") ? "block" : "none";
+      rotWrap.style.display = (["mirror", "splitter", "adder"].includes(activeTool)) ? "flex" : "none";
+      
+      if (activeTool === "mirror") {
+        orientWrap.style.display = "block";
+        orientSel.innerHTML = '<option value="/">Diagonal /</option><option value="\\">Diagonal \\</option>';
+      } else if (activeTool === "splitter") {
+        orientWrap.style.display = "block";
+        orientSel.innerHTML = '<option value="horizontal">Horizontal</option><option value="vertical">Vertical</option>';
+      } else {
+        orientWrap.style.display = "none";
+      }
+    }
+
+    function getCellMetrics() {
+      const w = canvas.width;
+      const h = canvas.height;
+      const cols = level.grid.width;
+      const rows = level.grid.height;
+      const cellW = (w - padding * (cols + 1)) / cols;
+      const cellH = (h - padding * (rows + 1)) / rows;
+      const gridW = cols * cellW + (cols + 1) * padding;
+      const gridH = rows * cellH + (rows + 1) * padding;
+      const originX = (w - gridW) / 2;
+      const originY = (h - gridH) / 2;
+      return { cellW, cellH, originX, originY, cols, rows };
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      const rad = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rad, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rad);
+      ctx.arcTo(x + w, y + h, x, y + h, rad);
+      ctx.arcTo(x, y + h, x, y, rad);
+      ctx.arcTo(x, y, x + w, y, rad);
+      ctx.closePath();
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const { cellW, cellH, originX, originY, cols, rows } = getCellMetrics();
+
+      // Board Frame
+      roundRect(ctx, originX - 10, originY - 10, cols * (cellW + padding) + padding + 20, rows * (cellH + padding) + padding + 20, 16);
+      ctx.fillStyle = "#2b313c";
+      ctx.fill();
+
+      // Cells
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const px = originX + padding + x * (cellW + padding);
+          const py = originY + padding + y * (cellH + padding);
+          roundRect(ctx, px, py, cellW, cellH, radius);
+          ctx.fillStyle = "#424956";
+          ctx.fill();
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+
+      // Obstacles
+      for (const piece of level.pieces.filter(p => p.type === "obstacle")) {
+        const px = originX + padding + piece.x * (cellW + padding);
+        const py = originY + padding + piece.y * (cellH + padding);
+        roundRect(ctx, px, py, cellW, cellH, radius);
+        ctx.fillStyle = "#262c37";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.stroke();
+      }
+
+      // Targets
+      for (const t of level.targets) {
+        const px = originX + padding + t.x * (cellW + padding);
+        const py = originY + padding + t.y * (cellH + padding);
+        roundRect(ctx, px + 4, py + 4, cellW - 8, cellH - 8, radius);
+        ctx.fillStyle = "#262c35";
+        ctx.fill();
+        ctx.strokeStyle = COLOR_MAP[t.color] || "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(px + cellW / 2, py + cellH / 2, cellW * 0.14, 0, Math.PI * 2);
+        ctx.fillStyle = COLOR_MAP[t.color] || "#fff";
+        ctx.fill();
+      }
+
+      // Emitters
+      for (const e of level.emitters) {
+        const cx = originX + padding + e.x * (cellW + padding) + cellW / 2;
+        const cy = originY + padding + e.y * (cellH + padding) + cellH / 2;
+        roundRect(ctx, cx - cellW * 0.4, cy - cellH * 0.4, cellW * 0.8, cellH * 0.8, radius);
+        ctx.fillStyle = COLOR_MAP[e.color] || "#fff";
+        ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.font = `bold ${cellW * 0.45}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const dirSymbol = { up: "⇧", right: "⇨", down: "⇩", left: "⇦" }[e.dir] || "⇨";
+        ctx.fillText(dirSymbol, cx, cy + 1);
+      }
+
+      // Pieces
+      for (const piece of level.pieces) {
+        if (piece.type === "obstacle") continue;
+        const cx = originX + padding + piece.x * (cellW + padding) + cellW / 2;
+        const cy = originY + padding + piece.y * (cellH + padding) + cellH / 2;
+        ctx.fillStyle = piece.type === "mirror" ? "#68a9ff" : piece.type === "splitter" ? "#58ffd0" : "#fff";
+        ctx.font = `bold ${cellW * 0.65}px monospace`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const glyph = piece.type === "mirror" ? piece.orientation : piece.type === "splitter" ? "+" : "#";
+        ctx.fillText(glyph, cx, cy);
+      }
+    }
+
+    function clearCell(x, y) {
+      level.emitters = level.emitters.filter(e => !(e.x === x && e.y === y));
+      level.targets = level.targets.filter(t => !(t.x === x && t.y === y));
+      level.pieces = level.pieces.filter(p => !(p.x === x && p.y === y));
+    }
+
+    function handleAction(x, y, isRightClick = false) {
+      if (x < 0 || y < 0 || x >= level.grid.width || y >= level.grid.height) return;
+      
+      if (isRightClick || activeTool === "eraser") {
+        clearCell(x, y);
+        render();
+        return;
+      }
+
+      clearCell(x, y);
+      const rotatable = document.getElementById("tool-rotatable").checked;
+      const dir = document.getElementById("tool-dir").value;
+      const orientation = document.getElementById("tool-orient").value;
+
+      if (activeTool === "emitter") {
+        level.emitters.push({ x, y, dir, color: activeColor });
+      } else if (activeTool === "target") {
+        level.targets.push({ x, y, color: activeColor });
+      } else if (activeTool === "obstacle") {
+        level.pieces.push({ type: "obstacle", x, y });
+      } else if (activeTool === "mirror") {
+        level.pieces.push({ type: "mirror", x, y, orientation, rotatable });
+      } else if (activeTool === "splitter") {
+        level.pieces.push({ type: "splitter", x, y, orientation, rotatable });
+      } else if (activeTool === "adder") {
+        level.pieces.push({ type: "adder", x, y, dir, rotatable });
+      }
+
+      render();
+    }
+
+    // Canvas Events
+    function getCellCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX - rect.left;
+      const clientY = e.clientY - rect.top;
+      const { cellW, cellH, originX, originY } = getCellMetrics();
+      const x = Math.floor((clientX - originX - padding) / (cellW + padding));
+      const y = Math.floor((clientY - originY - padding) / (cellH + padding));
+      return { x, y };
+    }
+
+    canvas.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      const { x, y } = getCellCoords(e);
+      handleAction(x, y, e.button === 2 || e.button === 1);
+    });
+
+    canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+    // Tool switching
+    document.querySelectorAll(".tool-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tool-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeTool = btn.dataset.tool;
+        syncToolUI();
+      });
+    });
+
+    // Color switching
+    document.querySelectorAll(".color-dot").forEach(dot => {
+      dot.addEventListener("click", () => {
+        document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("active"));
+        dot.classList.add("active");
+        activeColor = dot.dataset.color;
+      });
+    });
+
+    // Dimension Inputs
+    document.getElementById("grid-w").addEventListener("change", (e) => {
+      level.grid.width = Math.max(3, parseInt(e.target.value) || 9);
+      render();
+    });
+    document.getElementById("grid-h").addEventListener("change", (e) => {
+      level.grid.height = Math.max(3, parseInt(e.target.value) || 9);
+      render();
+    });
+
+    // Clear
+    document.getElementById("btn-clear").addEventListener("click", () => {
+      if (confirm("Clear all pieces, targets, and emitters?")) {
+        level.emitters = [];
+        level.targets = [];
+        level.pieces = [];
+        render();
+      }
+    });
+
+    // Export JSON
+    document.getElementById("btn-export").addEventListener("click", () => {
+      level.id = document.getElementById("meta-id").value;
+      level.title = document.getElementById("meta-title").value;
+      level.metadata = { description: document.getElementById("meta-desc").value };
+      level.rules.canPlaceOwnBlocks = document.getElementById("rule-place-blocks").checked;
+
+      const blob = new Blob([JSON.stringify(level, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${level.id || "level"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Import JSON
+    const fileInput = document.getElementById("file-input");
+    document.getElementById("btn-import").addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result);
+          level = { ...level, ...data };
+          document.getElementById("meta-id").value = level.id || "level_custom";
+          document.getElementById("meta-title").value = level.title || "Custom Level";
+          document.getElementById("meta-desc").value = level.metadata?.description || "";
+          document.getElementById("grid-w").value = level.grid?.width || 9;
+          document.getElementById("grid-h").value = level.grid?.height || 9;
+          document.getElementById("rule-place-blocks").checked = Boolean(level.rules?.canPlaceOwnBlocks);
+          render();
+        } catch (err) {
+          alert("Invalid level JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    syncToolUI();
+    render();
+  </script>
+</body>
+</html>

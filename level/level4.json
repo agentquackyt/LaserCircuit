@@ -8,7 +8,8 @@
     { "x": 7, "y": 3, "dir": "down", "color": "green" }
   ],
   "pieces": [
-        { "type": "mirror", "x": 4, "y": 5, "orientation": "\\", "rotatable": true }
+    { "type": "mirror", "x": 4, "y": 5, "orientation": "\\", "rotatable": true },
+    { "type": "obstacle", "x": 5, "y": 4 }
   ],
   "targets": [
     { "x": 8, "y": 5, "color": "green" },
