@@ -23,6 +23,14 @@ header {
   width: 100%;
 }
 
+.level-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-block-start: auto;
+  padding: 1rem 0;
+}
+
 .hidden {
   display: none !important;
 }
@@ -125,10 +133,12 @@ dialog {
   position: fixed;
   inset: 0;
   margin: auto;
+  border: none;
 }
 
 .icon {
   max-height: 60dvh;
+  max-width: 100%;
   border-radius: 1rem;
   transform: skew(-4deg, 2deg);
 }
@@ -140,7 +150,9 @@ dialog {
     align-items: center;
     gap: 16px;
     width: 100%;
-    max-width: 460px;
+    max-width: 500px;
+    height: 100%;
+    flex: 1;
     margin: 0 auto;
 }
 
@@ -171,6 +183,7 @@ dialog {
     min-height: 72px;
     padding: 8px 4px;
     text-align: center;
+    aspect-ratio: 6/5;
 }
 
 .level-cell-btn .level-number {
@@ -184,34 +197,53 @@ dialog {
     margin-top: 4px;
 }
 
-.level-footer {
-    margin-top: 8px;
+.dialog-content {
+  padding: 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
 }
 
-/* Victory Screen Modal */
-.victory-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
+.dialog-content h2 {
+  margin: 0;
 }
 
-.victory-card {
-    background: #1e1e24;
-    color: #fff;
-    padding: 24px;
-    border-radius: 8px;
-    text-align: center;
-    min-width: 280px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+.dialog-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
 }
 
-.victory-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stat-row > span {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.new-record-banner {
+  color: #f59e0b;
+  font-weight: bold;
+  margin-top: 1.5rem;
+  font-size: 1.3rem;
+}
+
+.new-record-banner.hidden {
+  display: none;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#completion-btn-finish {
+  flex: 1;
+  padding: 1rem 2rem
 }

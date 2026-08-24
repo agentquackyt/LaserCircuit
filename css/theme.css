@@ -10,6 +10,9 @@
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+
 }
 
 @media (max-width: 767px) {
@@ -17,15 +20,20 @@
     max-width: 100%;
     margin: 0;
   }
+
+  header {
+    display: none !important;
+  }
 }
 
 @media (min-width: 768px) {
   header {
-    max-width: 766px;
+    max-width: 650px;
     margin: 0 auto;
   }
+
   .screen {
-    max-width: 766px;
+    max-width: 650px;
     margin: 0 auto;
   }
 }
@@ -36,6 +44,7 @@
     color: #4b4b4b;
   }
 }
+
 /*
 @media (prefers-color-scheme: dark) {
   body {

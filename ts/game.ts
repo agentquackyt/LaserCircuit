@@ -10,11 +10,11 @@ const engine = Engine.getInstance();
 const world = engine.world;
 
 // Create canvas inside the #game-screen element
-const gameScreen = document.querySelector("#game-screen") as HTMLElement | null;
+const gameScreen = document.querySelector("#complete-level-btn") as HTMLElement | null;
 const canvas = document.createElement("canvas");
 canvas.className = "game-board";
 canvas.style.display = "block";
-if (gameScreen) gameScreen.appendChild(canvas);
+if (gameScreen) gameScreen.before(canvas);
 
 // Initialize systems
 const grid = new GridRendererSystem(canvas, 9, 9, 6, 8);

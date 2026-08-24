@@ -4,7 +4,7 @@ import { EventComponent } from "./components";
 import { HighscoreSystem } from "./HighscoreSystem";
 
 export class LevelSystem<T = unknown> extends EntitySystem {
-    public list: Array<{ id: string; title?: string; [k: string]: any }> = [];
+    public list: Array<{ id: string; title?: string;[k: string]: any }> = [];
     public currentLevelId?: string;
     public currentLevel?: T;
 
@@ -57,7 +57,25 @@ export class LevelSystem<T = unknown> extends EntitySystem {
             const json = await res.json();
             this.currentLevelId = id;
             this.currentLevel = json as T;
-            try { localStorage.setItem(this.storageKey, id); } catch (_e) {}
+
+            // display the level title in the game screen
+            const titleEl = document.getElementById("lvl-title");
+            if (titleEl) {
+                // @ts-expect-error
+                let lvlTitle = this.currentLevel.title || `Level ${id}`;
+                titleEl.textContent = lvlTitle;
+            }
+
+            const idEl = document.getElementById("lvl-id");
+            if (idEl) {
+                // strip leading level prefix ("level1") then divide by 9 to get the tab index
+                let lvlNumber = new Number(id.replace("level", ""));
+                console.log("LevelSystem: loadLevel", id, lvlNumber);
+                let lvlID = `${Math.floor((lvlNumber.valueOf() - 1) / this.LEVELS_PER_TAB) + 1}.${(lvlNumber.valueOf() - 1) % this.LEVELS_PER_TAB + 1}`;
+                idEl.textContent = lvlID;
+            }
+
+            try { localStorage.setItem(this.storageKey, id); } catch (_e) { }
 
             // Start timer and reset moves
             this.startTime = performance.now();
@@ -149,12 +167,12 @@ export class LevelSystem<T = unknown> extends EntitySystem {
             const isActive = t === this.currentTabIndex;
 
             tabBtn.className = `btn-bold ${isActive ? "btn-primary" : "btn-basic"} small`;
-            tabBtn.textContent = `Set ${t + 1}`;
+            tabBtn.textContent = `Stage ${t + 1}`;
 
             if (!unlocked) {
                 tabBtn.disabled = true;
                 tabBtn.style.opacity = "0.4";
-                tabBtn.title = `Complete at least ${this.UNLOCK_REQ}/9 levels in Set ${t} to unlock`;
+                tabBtn.title = `Complete at least ${this.UNLOCK_REQ}/9 levels in Stage ${t} to unlock`;
             } else {
                 tabBtn.onclick = () => {
                     this.currentTabIndex = t;
