@@ -1,42 +1,39 @@
 # LaserCircuit
+LaserCircuit ist is clever out-of-the-box thinking game, made and optimized for mobile use. This version includes 12 level, handcrafted by myself, with various different difficulties. For some problems you will need to think out of the box, but you will figure it out. And you only need 6/9 to unlock Stage 2.
 
-An addictive grid-based puzzle game where you route, reflect, and manipulate laser beams across intricate circuits to power targets and clear levels. Built from scratch with **TypeScript**, an **Entity-Component-System (ECS)** architecture, and bundled with **Bun**.
+> This project has been made for Hackclub's Stardance Challenge
 
-## Highlights
+> Visit my project there: [Stardance](https://stardance.hackclub.com/projects/45734)  
 
-- **12 Handcrafted Levels:** Ranging from introductory logic puzzles to mind-bending laser mazes.
-- **Custom ECS Engine:** Lightweight, modular Entity-Component-System written in pure TypeScript for crisp simulation and rendering.
-- **Built-in Level Editor:** Visual level creator (`editor.html`) allowing you to design, test, and export your own puzzle maps into JSON.
-- **Zero Heavy Frameworks:** Pure web performance with instant load times powered by Bun.
+## How does it work?
 
-## How to Play
+> Play the game here: [Web hosted-version](https://agentquackyt.github.io/LaserCircuit/)
 
-Play the game here: [Web hosted-version](https://agentquackyt.github.io/LaserCircuit/)
+Each level has a number of emmiters (which will spawn the beams) and targets, which you need to light up in the right color in order to complete each level. You will need to make use of both mirrors and splitters in order to complete all level. A table of each available colors to mix can be found below this section. Once you complete each level, your highscore is the time it took you to find the solution. When you complete 6 out of 9 level in a stage, you unlock the next one.
 
-1. **Inspect the Circuit:** Identify the laser emitters, mirrors, splitters, blockers, and target receptors.
-2. **Rotate & Position Elements:** Click grid pieces to adjust laser angles and directions.
-3. **Power All Targets:** Guide every laser path to activate all designated targets simultaneously to unlock the next level.
-4. **Beat Your Highscore:** Solve puzzles in fewer time to climb the ranks.
+Here are the newly mixed colors:
 
-## Project Structure
-
-```text
-LaserCircuit/
-├── ts/
-│   ├── ecs/              # Custom lightweight ECS (Engine, Entity, System)
-│   ├── systems/          # GridRenderer, InputManager, LevelSystem, HighscoreSystem
-│   ├── utils/            # LaserLogic, FancyText
-│   └── game.ts           # Game initialization & game loop
-├── level/                # Handcrafted level definitions (JSON)
-├── css/                  # Styling & themes
-├── editor.html           # In-browser level editor
-├── index.html            # Main game entry
-├── build.ts              # Bun build pipeline
-└── server.ts             # Development server
 ```
---
+red + blue = purple
+red + yellow = orange
+yellow + green = lime
+blue + grenn = aqua
 
-## Getting Started
+White is created by mixing 2 of the colors above
+```
+
+## Development
+> Play the game here: [Web hosted-version](https://agentquackyt.github.io/LaserCircuit/)
+
+The app is written in HTML, CSS and Typescript without external frameworks and makes use of Bun's ability to bundle HTML and TS (as drop in replacment for JS) using the very simple `bun build index.html` command. 
+
+I have used this technology for many other web games before and love the freedom this provides without heavy render engines or frameworks. 
+
+The app uses a ECS system written by myself (partially reused from my previous [Hanse](https://agentquackyt.github.io/Hanse2.0/) project), which uses systems for functionality and components for data (this didnt fully work this time, oppsie). 
+
+My UI is inspired by duolingo (especially the button) and is fully written in CSS, making use of modern web features such as color-mix and variables
+
+## Developing yourself
 
 ### Prerequisites
 
@@ -50,7 +47,7 @@ LaserCircuit/
    cd LaserCircuit
    ```
 
-2. **Install dependencies:**
+2. **Install the development dependencies:**
    ```bash
    bun install
    ```
@@ -76,6 +73,8 @@ Want to build your own levels?
 2. Place laser sources, mirrors, and splitters onto the grid.
 3. Export the output JSON into `level/levelX.json` and register it inside `level/list.json` (bun run list.ts).
 
+## AI disclosure
+Github Copilot for code completion as well as initial setup (agent, first commit), Google Search AI & Gemini for general, more simple problems.
 
 ## License
 
