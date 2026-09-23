@@ -22,7 +22,7 @@
   }
 
   header {
-    display: none !important;
+    /* display: none !important; */
   }
 }
 
@@ -32,7 +32,7 @@
     margin: 0 auto;
   }
 
-  .screen {
+  .screen:not(#editor-screen) {
     max-width: 650px;
     margin: 0 auto;
   }

@@ -1,6 +1,8 @@
 import indexHtml from "./index.html";
 import editorHtml from "./editor.html";
 
+Bun.env.MODE = "dev";
+
 const server = Bun.serve({
     port: 3000,
     routes: {

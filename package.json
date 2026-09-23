@@ -9,5 +9,8 @@
   },
   "scripts": {
     "dev": "bun run list && bun run server"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0"
   }
 }

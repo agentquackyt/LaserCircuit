@@ -1,10 +1,12 @@
 import { Engine } from "./ecs/Engine";
 import GridRendererSystem from "./systems/GridRendererSystem";
 import InputManagerSystem from "./systems/InputManagerSystem";
-import {HighscoreSystem} from "./systems/HighscoreSystem";
-import {LevelSystem} from "./systems/LevelSystem";
-import { Entity } from "./ecs/Entity";
-import { EventComponent } from "./systems/components";
+import { HighscoreSystem } from "./systems/HighscoreSystem";
+import { SupabaseLevelSystem } from "./systems/LevelSystem";
+import { CommunityLevelEditor } from "./editor/CommunityLevelEditor";
+import { supabase } from "./database/supabase";
+import { ButtonBuilder } from "./utils/View";
+import { DiscordRequiredView } from "./editor/views/DiscordRequiredView";
 
 const engine = Engine.getInstance();
 const world = engine.world;
@@ -28,25 +30,105 @@ const highs = new HighscoreSystem();
 world.addEntitySystem(highs);
 
 // Level system and populate level select
-const levelSystem = new LevelSystem<any>();
-world.addEntitySystem(levelSystem);
+
 
 // Prepare level selection screen (buttons) on Start
 const titleScreen = document.querySelector("#title-screen") as HTMLElement | null;
 const levelScreen = document.querySelector("#level-screen") as HTMLElement | null;
-const gameScreenEl = document.querySelector("#game-screen") as HTMLElement | null;
+const editorScreen = document.querySelector("#editor-screen") as HTMLElement | null;
 
-const startBtn = (document.querySelector("#btn-play") || document.querySelector("#g-btn-start")) as HTMLButtonElement | null;
-if (startBtn) {
-	startBtn.addEventListener("click", async () => {
-		// show level screen
-		if (titleScreen) titleScreen.classList.add("hidden");
-		if (levelScreen) levelScreen.classList.remove("hidden");
-		
-		// Load level list and render 3x3 tabbed grid
-		await levelSystem.loadList();
-		levelSystem.renderLevelScreen();
-	});
+document.querySelector("#btn-play")!.addEventListener("click", startGame);
+document.querySelector("#btn-play-editor")!.addEventListener("click", startEditor);
+document.querySelector("#btn-logout")!.addEventListener("click", logout);
+async function startGame() {
+	const levelSystem = new SupabaseLevelSystem();
+	world.addEntitySystem(levelSystem);
+	engine.start();
+
+	// show level screen
+	if (titleScreen) titleScreen.classList.add("hidden");
+	if (levelScreen) levelScreen.classList.remove("hidden");
+
+	// Load level list and render 3x3 tabbed grid
+	await levelSystem.loadList();
+	levelSystem.renderLevelScreen();
 }
 
-engine.start();
+async function startEditor() {
+	if (titleScreen) titleScreen.classList.add("hidden");
+	if (levelScreen) levelScreen.classList.add("hidden");
+	if (editorScreen) editorScreen.classList.remove("hidden");
+	let isLoggedIn = await loginWithDiscord();
+	if (!isLoggedIn) return; // If not logged in, don't proceed
+	CommunityLevelEditor.getInstance().load();
+} 
+
+supabase.auth.onAuthStateChange((event, session) => {
+	if (event === 'SIGNED_IN' && session) {
+		console.log('User signed in:', session.user);
+		console.log('Discord metadata:', session.user.user_metadata);
+		// session.user.user_metadata contains:
+		// - full_name / name
+		// - avatar_url
+		// - custom_claims (e.g. Discord username / discriminator)
+	}
+
+	if (event === 'SIGNED_OUT') {
+		console.log('User signed out');
+	}
+});
+
+async function loginWithDiscord() {
+	if (await checkAuth()) {
+		return true;
+	}
+	let view = new DiscordRequiredView("editor");
+	view.attachTo(editorScreen!);
+	return false;
+}
+
+// 2. Sign out
+async function logout() {
+	const { error } = await supabase.auth.signOut();
+	if (error) console.error('Error signing out:', error.message);
+	checkAuth(); // Update UI after logout
+}
+
+async function checkAuth() {
+	const { data: { user }, error } = await supabase.auth.getUser();
+
+	if (error || !user) {
+		console.log('No valid session or session expired:', error?.message);
+		document.querySelectorAll(".discord-picture")!.forEach((img) => img.classList.add("hidden"));
+		document.querySelectorAll(".data-logged-in")!.forEach((el) => el.classList.add("hidden"));
+		return false;
+	}
+
+	document.querySelectorAll<HTMLImageElement>(".discord-picture")!.forEach((img) => {
+		img.src = user.user_metadata.avatar_url || "";
+		img.classList.remove("hidden");
+	});
+
+	document.querySelectorAll(".data-logged-in")!.forEach((el) => el.classList.remove("hidden"));
+
+
+	console.log('Authenticated user:', user);
+	return true;
+}
+
+function checkParams() {
+	const urlParams = new URLSearchParams(window.location.search);
+	const fromParam = urlParams.get('from');
+	// strip the query params from the URL to avoid repeated actions on refresh
+	if (fromParam) {
+		const newUrl = window.location.origin + window.location.pathname;
+		window.history.replaceState({}, document.title, newUrl);
+	}
+
+	if (fromParam === 'editor') {
+		startEditor();
+	}
+}
+
+checkAuth();
+checkParams();

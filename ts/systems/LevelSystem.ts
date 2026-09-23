@@ -2,6 +2,16 @@ import { EntitySystem } from "../ecs/System";
 import { Entity } from "../ecs/Entity";
 import { EventComponent } from "./components";
 import { HighscoreSystem } from "./HighscoreSystem";
+import { supabase } from "../database/supabase";
+import { Cache } from "../utils/cache";
+
+export interface LevelRecord {
+    id: string;
+    slug: string;
+    title: string;
+    period: 'weekly' | 'monthly' | 'standard';
+    level_data: any; // Matches your laser circuit grid format
+}
 
 export class LevelSystem<T = unknown> extends EntitySystem {
     public list: Array<{ id: string; title?: string;[k: string]: any }> = [];
@@ -316,4 +326,144 @@ export class LevelSystem<T = unknown> extends EntitySystem {
     }
 }
 
-export default LevelSystem;
+export class SupabaseLevelSystem extends LevelSystem {
+    public weeklyLevel: LevelRecord | null = null;
+
+    override async loadList(): Promise<Array<{ id: string; title?: string; [k: string]: any }>> {
+        const CACHE_KEY = "standard_levels_list";
+
+        // Check 15-minute cache
+        const cached = Cache.get<Array<any>>(CACHE_KEY);
+        if (cached) {
+            this.list = cached;
+            return this.list;
+        }
+
+        const { data, error } = await supabase
+            .from("levels")
+            .select("id, slug, title, period, level_data")
+            .eq("period", "standard")
+            .order("created_at", { ascending: true });
+
+        if (error || !data) {
+            console.error("Failed to load levels from Supabase:", error);
+            this.list = [];
+            return [];
+        }
+
+        this.list = data.map((row) => ({
+            id: row.id,
+            slug: row.slug,
+            title: row.title,
+            period: row.period,
+            level_data: row.level_data,
+        }));
+
+        // Store result for 15 minutes
+        Cache.set(CACHE_KEY, this.list);
+        return this.list;
+    }
+
+    async getCurrentWeeklyLevel(): Promise<LevelRecord | null> {
+        const CACHE_KEY = "current_weekly_level";
+
+        // Check 15-minute cache
+        const cached = Cache.get<LevelRecord>(CACHE_KEY);
+        if (cached) {
+            this.weeklyLevel = cached;
+            return this.weeklyLevel;
+        }
+
+        const { data, error } = await supabase
+            .from("levels")
+            .select("*")
+            .eq("period", "weekly")
+            .order("active_from", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error || !data) {
+            console.warn("No active weekly level found:", error);
+            this.weeklyLevel = null;
+            return null;
+        }
+
+        this.weeklyLevel = data as LevelRecord;
+
+        // Store result for 15 minutes
+        Cache.set(CACHE_KEY, this.weeklyLevel);
+        return this.weeklyLevel;
+    }
+
+    override async loadLevel(id: string): Promise<any> {
+        try {
+            let record = this.list.find((item) => item.id === id || item.slug === id);
+
+            if (!record && this.weeklyLevel && (this.weeklyLevel.id === id || this.weeklyLevel.slug === id)) {
+                record = this.weeklyLevel;
+            }
+
+            // Check level-specific cache if not preloaded in memory
+            if (!record || !record.level_data) {
+                const CACHE_KEY = `level_${id}`;
+                const cachedLevel = Cache.get<any>(CACHE_KEY);
+
+                if (cachedLevel) {
+                    record = cachedLevel;
+                } else {
+                    const { data, error } = await supabase
+                        .from("levels")
+                        .select("*")
+                        .or(`id.eq.${id},slug.eq.${id}`)
+                        .limit(1)
+                        .single();
+
+                    if (error || !data) throw new Error(`Level ${id} not found in Supabase`);
+                    record = data;
+                    Cache.set(CACHE_KEY, record);
+                }
+            }
+
+            if(record === undefined) return;
+
+            this.currentLevelId = record.id;
+            this.currentLevel = record.level_data;
+
+            // DOM & Screen updates
+            const titleEl = document.getElementById("lvl-title");
+            if (titleEl) titleEl.textContent = record.title || `Level ${id}`;
+
+            const idEl = document.getElementById("lvl-id");
+            if (idEl) {
+                const index = this.list.findIndex((l) => l.id === record.id);
+                if (index !== -1) {
+                    const tab = Math.floor(index / 9) + 1;
+                    const slot = (index % 9) + 1;
+                    idEl.textContent = `${tab}.${slot}`;
+                } else {
+                    idEl.textContent = record.slug || "SP";
+                }
+            }
+
+            try { localStorage.setItem("laser.last_level", id); } catch (_e) { }
+
+            // @ts-ignore
+            this.startTime = performance.now();
+            // @ts-ignore
+            this.movesCount = 0;
+            // @ts-ignore
+            this.isPlaying = true;
+
+            if (this.world) {
+                const e = new Entity();
+                e.addComponent(new EventComponent("level:loaded", { id, data: this.currentLevel }));
+                this.world.addEntity(e);
+            }
+
+            return this.currentLevel;
+        } catch (e) {
+            console.warn("SupabaseLevelSystem: loadLevel failed", e);
+            return undefined;
+        }
+    }
+}
