@@ -1,7 +1,8 @@
 import { ButtonBuilder, ButtonFlavour, ContainerBuilder, View } from "../../utils/View";
+import type { UserLevelDraft } from "../CommunityLevelTypes";
 
 export class LevelSelectView extends View {
-    constructor(data?: any) {
+    constructor(data?: any, levels: UserLevelDraft[] = []) {
 
         const section_1 = new ContainerBuilder()
             .setFlex("column", 1)
@@ -16,14 +17,13 @@ export class LevelSelectView extends View {
 
         const header = document.createElement("h2");
         console.log("User data:", data);
-        const username = data.user_metadata.full_name || "friend";
+        const username = data?.user_metadata?.full_name || data?.email?.split("@")[0] || "friend";
 
         header.textContent = `Welcome back, @${username}!`;
         section_1.appendChild(header);
 
         const section_2 = new ContainerBuilder().setFlex("column", 1);
 
-        const ownLevel = [{ name: "Level 1", id: "234" }, { name: "Level 2", id: "567" }, { name: "Level 3", id: "890" }];
         const newLevelBtn = new ButtonBuilder()
             .setText("Create New Level")
             .setBold(ButtonFlavour.BASIC)
@@ -31,9 +31,10 @@ export class LevelSelectView extends View {
             .build();
 
         section_2.appendChild(newLevelBtn);
-        for (const level of ownLevel) {
+        for (const level of levels) {
+            if (!level.id) continue;
             const levelBtn = new ButtonBuilder()
-                .setText(level.name)
+                .setText(level.title)
                 .setBold(ButtonFlavour.PRIMARY)
                 .addDataAttribute("levelId", level.id)
                 .setOnClick(() => {this.invokeTrigger("levelSelected", level.id)})

@@ -75,6 +75,8 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 	if (event === 'SIGNED_OUT') {
 		console.log('User signed out');
+		// Force reload to reset the editor state and UI
+		window.location.reload();
 	}
 });
 

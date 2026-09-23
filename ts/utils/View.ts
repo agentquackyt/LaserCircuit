@@ -28,6 +28,10 @@ export class View {
         }
     }
 
+    getElement(): HTMLElement {
+        return this.element;
+    }
+
     protected invokeTrigger(trigger: string, data?: any) {
         if (this.triggers[trigger]) {
             this.triggers[trigger](data);
@@ -96,6 +100,17 @@ export class ButtonBuilder {
         return this;
     }
 
+
+    addStyle(style: Partial<CSSStyleDeclaration>): ButtonBuilder {
+        Object.assign(this.button.style, style);
+        return this;
+    }
+
+    addCSSVariable(key: string, value: string): ButtonBuilder {
+        this.button.style.setProperty(key, value);
+        return this;
+    }
+
     build(): HTMLButtonElement {
         return this.button;
     }
@@ -128,6 +143,12 @@ export class ContainerBuilder {
 
     addStyle(style: Partial<CSSStyleDeclaration>): ContainerBuilder {
         Object.assign(this.container.style, style);
+        return this;
+    }
+
+
+    addCSSVariable(key: string, value: string): ContainerBuilder {
+        this.container.style.setProperty(key, value);
         return this;
     }
 

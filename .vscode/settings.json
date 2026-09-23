@@ -1,3 +1,6 @@
 {
-    "chat.disableAIFeatures": false
+    "chat.disableAIFeatures": false,
+    "chat.tools.terminal.autoApprove": {
+        "bunx": true
+    }
 }

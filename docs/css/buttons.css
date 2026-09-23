@@ -16,7 +16,6 @@ button:not(.btn-bold) {
     --variant-background: white;
 
     --variant-border: rgb(123, 123, 123);
-
 }
 
 .btn-primary {
@@ -39,7 +38,20 @@ button:not(.btn-bold) {
     --variant-background: #dc3545;
 }
 
-.btn-bold {
+input, select {
+    --variant-color: black;
+    --variant-background: white;
+    --variant-border: #ccc;
+
+    font-weight: normal !important;
+}
+
+label {
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.btn-bold, input, select {
     --variant-border: color-mix(in srgb, var(--variant-background) 80%, #202020 20%);
 
     border-radius: .5rem;
@@ -90,4 +102,59 @@ button.shadow {
     flex-direction: column;
     gap: .75rem;
     width: 100%;
+}
+
+
+.btn-fill {
+    padding: 0;
+    height: 4rem;
+    width: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-fill>span.material-symbols-rounded {
+    font-size: 1.7rem;
+    pointer-events: none;
+    font-variation-settings:
+        'FILL' 1,
+        'wght' 600,
+        'GRAD' 0,
+        'opsz' 24;
+    --variant-border: rgb(89, 89, 89);
+    color: var(--variant-border);
+}
+
+/* Discord Variant Variables (used if standalone or with .btn-bold) */
+.btn-discord {
+    --variant-color: #ffffff;
+    --variant-background: #5865f2;
+    /* Official Discord Blurple */
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+/* Discord SVG Icon */
+.btn-discord::before {
+    content: "";
+    display: inline-block;
+    width: 1.25em;
+    height: 1.25em;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    /* Default white logo (for colored/brand backgrounds) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -28.5 256 256'%3E%3Cpath fill='%23ffffff' fill-rule='nonzero' d='M216.856 16.597C200.285 8.843 182.566 3.208 164.042 0c-2.275 4.113-4.933 9.645-6.766 14.046-19.692-2.961-39.203-2.961-58.533 0-1.832-4.401-4.55-9.645-6.846-14.046C73.353 3.208 55.613 8.864 39.042 16.638 5.618 67.147-3.443 116.4 1.087 164.956c22.169 16.555 43.653 26.612 64.775 33.193 5.215-7.178 9.866-14.808 13.873-22.849-7.631-2.9-14.94-6.478-21.846-10.632 1.832-1.357 3.624-2.776 5.356-4.237 42.123 19.702 87.89 19.702 129.51 0 1.752 1.46 3.544 2.88 5.356 4.237-6.927 4.175-14.256 7.753-21.887 10.653 4.007 8.02 8.638 15.671 13.873 22.848 21.142-6.58 42.646-16.637 64.815-33.192 5.316-56.288-9.08-105.09-38.055-148.36zM85.474 135.095c-12.645 0-23.015-11.805-23.015-26.18 0-14.375 10.149-26.2 23.015-26.2 12.867 0 23.236 11.804 23.015 26.2.02 14.376-10.148 26.18-23.015 26.18zm85.051 0c-12.645 0-23.015-11.805-23.015-26.18 0-14.375 10.149-26.2 23.015-26.2 12.866 0 23.236 11.804 23.015 26.2 0 14.376-10.149 26.18-23.015 26.18z'/%3E%3C/svg%3E");
+}
+
+/* Switch to Blurple icon when placed on the white/basic button */
+.btn-basic.btn-discord::before,
+button:not(.btn-bold).btn-discord::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -28.5 256 256'%3E%3Cpath fill='%235865F2' fill-rule='nonzero' d='M216.856 16.597C200.285 8.843 182.566 3.208 164.042 0c-2.275 4.113-4.933 9.645-6.766 14.046-19.692-2.961-39.203-2.961-58.533 0-1.832-4.401-4.55-9.645-6.846-14.046C73.353 3.208 55.613 8.864 39.042 16.638 5.618 67.147-3.443 116.4 1.087 164.956c22.169 16.555 43.653 26.612 64.775 33.193 5.215-7.178 9.866-14.808 13.873-22.849-7.631-2.9-14.94-6.478-21.846-10.632 1.832-1.357 3.624-2.776 5.356-4.237 42.123 19.702 87.89 19.702 129.51 0 1.752 1.46 3.544 2.88 5.356 4.237-6.927 4.175-14.256 7.753-21.887 10.653 4.007 8.02 8.638 15.671 13.873 22.848 21.142-6.58 42.646-16.637 64.815-33.192 5.316-56.288-9.08-105.09-38.055-148.36zM85.474 135.095c-12.645 0-23.015-11.805-23.015-26.18 0-14.375 10.149-26.2 23.015-26.2 12.867 0 23.236 11.804 23.015 26.2.02 14.376-10.148 26.18-23.015 26.18zm85.051 0c-12.645 0-23.015-11.805-23.015-26.18 0-14.375 10.149-26.2 23.015-26.2 12.866 0 23.236 11.804 23.015 26.2 0 14.376-10.149 26.18-23.015 26.18z'/%3E%3C/svg%3E");
 }

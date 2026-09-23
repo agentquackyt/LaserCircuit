@@ -2,6 +2,7 @@ import { TickSystem } from "../ecs/System";
 import type { Entity } from "../ecs/Entity";
 import { EventComponent } from "./components";
 import {
+    LIGHT_COLOR_HEX,
     simulateLaserLevel,
     rotatePiece,
     type AdderPiece,
@@ -32,6 +33,7 @@ type GridLayout = {
 export class GridRendererSystem extends TickSystem {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly canvas: HTMLCanvasElement;
+    private readonly resizeObserver?: ResizeObserver;
     private width: number;
     private height: number;
     private padding: number;
@@ -64,11 +66,15 @@ export class GridRendererSystem extends TickSystem {
         this.radius = radius;
         this.completeButton?.addEventListener("click", () => this.showCompletionDialog());
 
-        const resize = () => {
-            this.resize();
+        const refresh = () => {
+            this.refresh();
         };
-        resize();
-        window.addEventListener("resize", resize);
+        refresh();
+        window.addEventListener("resize", refresh);
+        if (typeof ResizeObserver !== "undefined") {
+            this.resizeObserver = new ResizeObserver(refresh);
+            this.resizeObserver.observe(canvas);
+        }
     }
 
     resize(): void {
@@ -77,9 +83,8 @@ export class GridRendererSystem extends TickSystem {
         if (rect.width <= 0 || rect.height <= 0) return;
         const nextWidth = Math.max(1, Math.floor(rect.width * dpr));
         const nextHeight = Math.max(1, Math.floor(rect.height * dpr));
-        if (this.canvas.width === nextWidth && this.canvas.height === nextHeight) return;
-        this.canvas.width = nextWidth;
-        this.canvas.height = nextHeight;
+        if (this.canvas.width !== nextWidth) this.canvas.width = nextWidth;
+        if (this.canvas.height !== nextHeight) this.canvas.height = nextHeight;
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         this.dirty = true;
     }
@@ -89,6 +94,35 @@ export class GridRendererSystem extends TickSystem {
         if (this.canvas.clientWidth <= 0 || this.canvas.clientHeight <= 0) return;
         if (this.dirty) this.recompute();
         this.render();
+    }
+
+    setLevelData(data: LaserLevelData): void {
+        this.applyLevelData(data);
+        this.recompute();
+        this.render();
+    }
+
+    setSimulationEnabled(enabled: boolean): void {
+        if (!enabled) this.simulation = undefined;
+        this.dirty = enabled;
+        if (enabled) this.recompute();
+        this.refresh();
+        requestAnimationFrame(() => this.refresh());
+    }
+
+    refresh(): void {
+        this.resize();
+        if (this.canvas.clientWidth <= 0 || this.canvas.clientHeight <= 0) return;
+        if (this.dirty) this.recompute();
+        this.render();
+    }
+
+    getSimulation(): LaserSimulationResult | undefined {
+        return this.simulation;
+    }
+
+    getCellAt(canvasX: number, canvasY: number): { x: number; y: number } | undefined {
+        return this.canvasToCell(canvasX, canvasY);
     }
 
     onEntityAdded(entity: Entity): void {
@@ -415,6 +449,13 @@ export class GridRendererSystem extends TickSystem {
             ctx.fillStyle = accent;
             ctx.fillText(glyph, cx, cy + 1);
 
+            if (piece.type === "splitter" && piece.dir) {
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = "#263238";
+                ctx.font = `700 ${Math.max(10, Math.floor(Math.min(cellW, cellH) * 0.22))}px "Google Sans", sans-serif`;
+                ctx.fillText(this.dirSymbol(piece.dir), cx + cellW * 0.2, cy - cellH * 0.18);
+            }
+
             if (piece.type === "adder") {
                 ctx.shadowBlur = 0;
                 ctx.fillStyle = "rgba(255,255,255,0.82)";
@@ -546,18 +587,7 @@ export class GridRendererSystem extends TickSystem {
     }
 
     private toCssColor(color: LightColor): string {
-        switch (color) {
-            case "red": return "#ff4b4b";
-            case "orange": return "#ff8c3a";
-            case "yellow": return "#ffe45c";
-            case "lime": return "#b4ff3a";
-            case "green": return "#4dff88";
-            case "cyan": return "#62f5ff";
-            case "blue": return "#4da3ff";
-            case "purple": return "#d56bff";
-            case "white": return "#ffffff";
-            default: return "#ffffff";
-        }
+        return LIGHT_COLOR_HEX[color];
     }
 
     private roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
