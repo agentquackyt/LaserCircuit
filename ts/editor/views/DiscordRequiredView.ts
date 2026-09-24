@@ -37,7 +37,7 @@ export class DiscordRequiredView extends View {
         message2.style.marginBottom = "1.5rem";
         view.appendChild(message2);
 
-        const redirectUrl = new URL(window.location.pathname);
+        const redirectUrl = new URL(window.location.toString());
         if (path) {
             redirectUrl.searchParams.set('from', path);
         }
