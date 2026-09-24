@@ -51,7 +51,7 @@ label {
     font-size: 1rem;
 }
 
-.btn-bold, input, select {
+.btn-bold, .container-bold, input, select, input[type="checkbox"] {
     --variant-border: color-mix(in srgb, var(--variant-background) 80%, #202020 20%);
 
     border-radius: .5rem;
@@ -86,6 +86,21 @@ label {
     transform: translateY(.2rem);
     margin-bottom: .3rem;
 
+}
+
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    
+    /* Native checkboxes collapse without explicit dimensions once appearance is removed */
+    width: 2rem;
+    height: 2rem;
+
+    --variant-background: #dc3545;
+}
+
+input[type="checkbox"]:checked {
+    --variant-background: #59cc62;
 }
 
 .btn-bold.large {
@@ -157,4 +172,11 @@ button.shadow {
 .btn-basic.btn-discord::before,
 button:not(.btn-bold).btn-discord::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -28.5 256 256'%3E%3Cpath fill='%235865F2' fill-rule='nonzero' d='M216.856 16.597C200.285 8.843 182.566 3.208 164.042 0c-2.275 4.113-4.933 9.645-6.766 14.046-19.692-2.961-39.203-2.961-58.533 0-1.832-4.401-4.55-9.645-6.846-14.046C73.353 3.208 55.613 8.864 39.042 16.638 5.618 67.147-3.443 116.4 1.087 164.956c22.169 16.555 43.653 26.612 64.775 33.193 5.215-7.178 9.866-14.808 13.873-22.849-7.631-2.9-14.94-6.478-21.846-10.632 1.832-1.357 3.624-2.776 5.356-4.237 42.123 19.702 87.89 19.702 129.51 0 1.752 1.46 3.544 2.88 5.356 4.237-6.927 4.175-14.256 7.753-21.887 10.653 4.007 8.02 8.638 15.671 13.873 22.848 21.142-6.58 42.646-16.637 64.815-33.192 5.316-56.288-9.08-105.09-38.055-148.36zM85.474 135.095c-12.645 0-23.015-11.805-23.015-26.18 0-14.375 10.149-26.2 23.015-26.2 12.867 0 23.236 11.804 23.015 26.2.02 14.376-10.148 26.18-23.015 26.18zm85.051 0c-12.645 0-23.015-11.805-23.015-26.18 0-14.375 10.149-26.2 23.015-26.2 12.866 0 23.236 11.804 23.015 26.2 0 14.376-10.149 26.18-23.015 26.18z'/%3E%3C/svg%3E");
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    flex: 1;
 }

@@ -243,6 +243,9 @@ body:not(#title-screen.hidden) .highscore-box {
 
 .community-editor-dimensions {
   gap: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .community-editor-palette {
