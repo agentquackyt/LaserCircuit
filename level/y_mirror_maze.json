@@ -1,0 +1,250 @@
+{
+  "title": "Yellow Mirror Show",
+  "grid": {
+    "width": 8,
+    "height": 8
+  },
+  "emitters": [
+    {
+      "x": 0,
+      "y": 2,
+      "dir": "right",
+      "color": "yellow"
+    }
+  ],
+  "targets": [
+    {
+      "x": 4,
+      "y": 1,
+      "color": "yellow"
+    },
+    {
+      "x": 0,
+      "y": 6,
+      "color": "yellow"
+    }
+  ],
+  "pieces": [
+    {
+      "type": "mirror",
+      "x": 1,
+      "y": 2,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 1,
+      "y": 3,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 2,
+      "y": 3,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 2,
+      "y": 4,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 3,
+      "y": 4,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 5,
+      "y": 5,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 5,
+      "y": 1,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 6
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 7
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 2,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "type": "mirror",
+      "x": 5,
+      "y": 4,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 0
+    },
+    {
+      "type": "obstacle",
+      "x": 3,
+      "y": 1
+    },
+    {
+      "type": "mirror",
+      "x": 7,
+      "y": 4,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 7,
+      "y": 2,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 5,
+      "y": 2,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 0
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 0
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 0
+    },
+    {
+      "type": "obstacle",
+      "x": 4,
+      "y": 0
+    },
+    {
+      "type": "mirror",
+      "x": 3,
+      "y": 7,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 0,
+      "y": 7,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "obstacle",
+      "x": 0,
+      "y": 5
+    },
+    {
+      "type": "obstacle",
+      "x": 1,
+      "y": 5
+    },
+    {
+      "type": "obstacle",
+      "x": 2,
+      "y": 5
+    },
+    {
+      "type": "obstacle",
+      "x": 2,
+      "y": 6
+    },
+    {
+      "type": "obstacle",
+      "x": 1,
+      "y": 6
+    },
+    {
+      "type": "splitter",
+      "x": 3,
+      "y": 5,
+      "orientation": "horizontal",
+      "dir": "right",
+      "rotatable": true
+    }
+  ],
+  "rules": {
+    "canPlaceOwnBlocks": false
+  },
+  "metadata": {
+    "description": "Correctly turn the mirror to toggle all the targets"
+  },
+  "id": "y_mirror_maze"
+}

@@ -1,8 +1,9 @@
 import { Entity, type ComponentClass } from "./Entity";
 import type { TickSystem, EntitySystem } from "./System";
+import { generateId } from "../Utils";
 
 class World {
-    readonly id: string = crypto.randomUUID();
+    readonly id: string = generateId();
     private readonly _entities = new Map<string, Entity>();
     private readonly _tickSystems: TickSystem[] = [];
     private readonly _entitySystems: EntitySystem[] = [];

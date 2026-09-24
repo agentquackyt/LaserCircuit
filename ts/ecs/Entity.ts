@@ -1,11 +1,13 @@
 
+import { generateId } from "../Utils";
+
 /** Constructor function usable as a type token for a component class. */
 type ComponentClass<T extends Component = Component> = new (...args: any[]) => T;
 
 abstract class Component {}
 
 class Entity {
-    readonly id: string = crypto.randomUUID();
+    readonly id: string = generateId();
     private readonly _components = new Map<string, Component>();
 
     addComponent<T extends Component>(component: T): this {

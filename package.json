@@ -8,6 +8,10 @@
     "typescript": "^5"
   },
   "scripts": {
-    "dev": "bun run list && bun run server"
+    "dev": "bun run list && bun run server",
+    "upload": "bun run server/upload-files.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0"
   }
 }

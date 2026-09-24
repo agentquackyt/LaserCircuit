@@ -2,6 +2,17 @@ import { EntitySystem } from "../ecs/System";
 import { Entity } from "../ecs/Entity";
 import { EventComponent } from "./components";
 import { HighscoreSystem } from "./HighscoreSystem";
+import { supabase } from "../database/supabase";
+import { Cache } from "../utils/cache";
+import { ButtonBuilder, ButtonFlavour } from "../utils/View";
+
+export interface LevelRecord {
+    id: string;
+    slug: string;
+    title: string;
+    period: 'weekly' | 'monthly' | 'standard';
+    level_data: any; // Matches your laser circuit grid format
+}
 
 export class LevelSystem<T = unknown> extends EntitySystem {
     public list: Array<{ id: string; title?: string;[k: string]: any }> = [];
@@ -17,6 +28,10 @@ export class LevelSystem<T = unknown> extends EntitySystem {
     private startTime: number = 0;
     private movesCount: number = 0;
     private isPlaying: boolean = false;
+
+    protected renderActiveLevelList(): void {
+        this.renderLevelScreen();
+    }
 
     constructor() {
         super();
@@ -259,7 +274,7 @@ export class LevelSystem<T = unknown> extends EntitySystem {
             if (dialog && typeof dialog.close === "function") dialog.close();
             if (gameScreenEl) gameScreenEl.classList.add("hidden");
             if (levelScreen) levelScreen.classList.remove("hidden");
-            this.renderLevelScreen();
+            this.renderActiveLevelList();
         });
 
         document.getElementById("completion-btn-retry")?.addEventListener("click", () => {
@@ -290,7 +305,7 @@ export class LevelSystem<T = unknown> extends EntitySystem {
 
             if (gameScreenEl) gameScreenEl.classList.add("hidden");
             if (levelScreen) levelScreen.classList.remove("hidden");
-            this.renderLevelScreen();
+            this.renderActiveLevelList();
         });
     }
 
@@ -316,4 +331,305 @@ export class LevelSystem<T = unknown> extends EntitySystem {
     }
 }
 
-export default LevelSystem;
+export class SupabaseLevelSystem extends LevelSystem {
+    public weeklyLevel: LevelRecord | null = null;
+    private communityLevels: Array<{ id: string; title: string; level_data: any; owner_id: string; created_at: string; updated_at: string }> = [];
+    private communityMode = false;
+
+    override async loadList(): Promise<Array<{ id: string; title?: string;[k: string]: any }>> {
+        this.communityMode = false;
+        const CACHE_KEY = "standard_levels_metadata_v2";
+
+        // Check 15-minute cache
+        const cached = Cache.get<Array<any>>(CACHE_KEY);
+        if (cached) {
+            this.list = cached;
+            return this.list;
+        }
+
+        const { data, error } = await supabase
+            .from("levels")
+            .select("id, slug, title, period")
+            .eq("period", "standard")
+            .order("created_at", { ascending: true });
+
+        if (error || !data) {
+            console.error("Failed to load levels from Supabase:", error);
+            this.list = [];
+            return [];
+        }
+
+        this.list = data.map((row) => ({
+            id: row.id,
+            slug: row.slug,
+            title: row.title,
+            period: row.period,
+        }));
+
+        // Store result for 15 minutes
+        Cache.set(CACHE_KEY, this.list);
+        return this.list;
+    }
+
+    async loadPublishedCommunityLevels(): Promise<void> {
+        this.communityMode = true;
+        const { data, error } = await supabase
+            .from("user_levels")
+            .select("id, owner_id, title, level_data, published, created_at, updated_at")
+            .eq("published", true)
+            .order("updated_at", { ascending: false });
+
+        if (error || !data) {
+            console.error("Failed to load published community levels:", error);
+            this.communityLevels = [];
+            this.list = [];
+            return;
+        }
+
+        this.communityLevels = data as typeof this.communityLevels;
+        this.list = this.communityLevels;
+    }
+
+    renderDiscoverScreen(): void {
+        const levelScreen = document.querySelector("#level-screen") as HTMLElement | null;
+        const titleScreen = document.querySelector("#title-screen") as HTMLElement | null;
+        if (!levelScreen) return;
+
+        levelScreen.innerHTML = "";
+        const container = document.createElement("div");
+        container.className = "discover-container";
+
+        const heading = document.createElement("h2");
+        heading.textContent = "Discover Community Levels";
+        container.appendChild(heading);
+
+        const controls = document.createElement("div");
+        controls.className = "discover-controls";
+
+        const search = document.createElement("input");
+        search.type = "search";
+        search.placeholder = "Search titles";
+        search.setAttribute("aria-label", "Search community levels");
+
+        const ownerFilter = document.createElement("select");
+        ownerFilter.setAttribute("aria-label", "Filter community levels");
+        const allOption = new Option("All published levels", "all");
+        const mineOption = new Option("My published levels", "mine");
+        ownerFilter.append(allOption, mineOption);
+
+        const sort = document.createElement("select");
+        sort.setAttribute("aria-label", "Sort community levels");
+        sort.append(
+            new Option("Newest created", "created_desc"),
+            new Option("Oldest created", "created_asc"),
+            new Option("Recently updated", "updated_desc"),
+            new Option("Least recently updated", "updated_asc")
+        );
+
+        controls.append(search, ownerFilter, sort);
+        container.appendChild(controls);
+
+        const results = document.createElement("div");
+        results.className = "discover-results";
+        container.appendChild(results);
+
+        const renderResults = () => {
+            const query = search.value.trim().toLowerCase();
+            const currentUserId = this.currentUserId;
+            const filtered = this.communityLevels
+                .filter((level) => level.title.toLowerCase().includes(query))
+                .filter((level) => ownerFilter.value !== "mine" || level.owner_id === currentUserId)
+                .sort((left, right) => {
+                    const [field, direction] = sort.value.split("_") as ["created" | "updated", "asc" | "desc"];
+                    const leftTime = Date.parse(field === "created" ? left.created_at : left.updated_at);
+                    const rightTime = Date.parse(field === "created" ? right.created_at : right.updated_at);
+                    return direction === "asc" ? leftTime - rightTime : rightTime - leftTime;
+                });
+
+            this.list = filtered;
+            results.innerHTML = "";
+            if (filtered.length === 0) {
+                const empty = document.createElement("p");
+                empty.textContent = "No published levels found.";
+                results.appendChild(empty);
+                return;
+            }
+
+            for (const level of filtered) {
+                const score = HighscoreSystem.getScore(level.id);
+
+                const button = new ButtonBuilder()
+                    .setBold(score ? ButtonFlavour.SECONDARY : ButtonFlavour.BASIC)
+                    .addDataAttribute("levelId", level.id)
+                    .setClass("discover-level")
+                    .setOnClick(() => {
+                        levelScreen.classList.add("hidden");
+                        document.querySelector("#game-screen")?.classList.remove("hidden");
+                        if (this.world) {
+                            const entity = new Entity();
+                            entity.addComponent(new EventComponent("ui:load-level", { levelId: level.id }));
+                            this.world.addEntity(entity);
+                        }
+                    }).build();
+
+                const title = document.createElement("strong");
+                title.textContent = level.title;
+                const updated = document.createElement("small");
+                updated.textContent = score
+                    ? `Updated ${new Date(level.updated_at).toLocaleDateString()} | Best ${HighscoreSystem.formatScore(score.time, score.moves)}`
+                    : `Updated ${new Date(level.updated_at).toLocaleDateString()} | No score`;
+                button.append(title, updated);
+                results.appendChild(button);
+            }
+        };
+
+        search.addEventListener("input", renderResults);
+        ownerFilter.addEventListener("change", renderResults);
+        sort.addEventListener("change", renderResults);
+        void this.getCurrentUserId().then((userId) => {
+            this.currentUserId = userId;
+            mineOption.disabled = !userId;
+            renderResults();
+        });
+
+        const footer = document.createElement("div");
+        footer.className = "level-footer";
+        const backButton = document.createElement("button");
+        backButton.className = "btn-bold btn-basic medium";
+        backButton.textContent = "Back to Menu";
+        backButton.onclick = () => {
+            levelScreen.classList.add("hidden");
+            titleScreen?.classList.remove("hidden");
+        };
+        footer.appendChild(backButton);
+        container.appendChild(footer);
+        levelScreen.appendChild(container);
+        renderResults();
+    }
+
+    protected override renderActiveLevelList(): void {
+        if (this.communityMode) {
+            this.renderDiscoverScreen();
+            return;
+        }
+        this.renderLevelScreen();
+    }
+
+    private currentUserId: string | null = null;
+
+    private async getCurrentUserId(): Promise<string | null> {
+        const { data } = await supabase.auth.getUser();
+        return data.user?.id ?? null;
+    }
+
+    async getCurrentWeeklyLevel(): Promise<LevelRecord | null> {
+        const CACHE_KEY = "current_weekly_level";
+
+        // Check 15-minute cache
+        const cached = Cache.get<LevelRecord>(CACHE_KEY);
+        if (cached) {
+            this.weeklyLevel = cached;
+            return this.weeklyLevel;
+        }
+
+        const { data, error } = await supabase
+            .from("levels")
+            .select("*")
+            .eq("period", "weekly")
+            .order("active_from", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error || !data) {
+            console.warn("No active weekly level found:", error);
+            this.weeklyLevel = null;
+            return null;
+        }
+
+        this.weeklyLevel = data as LevelRecord;
+
+        // Store result for 15 minutes
+        Cache.set(CACHE_KEY, this.weeklyLevel);
+        return this.weeklyLevel;
+    }
+
+    override async loadLevel(id: string): Promise<any> {
+        try {
+            let record = this.list.find((item) => item.id === id || item.slug === id);
+
+            if (!record && this.weeklyLevel && (this.weeklyLevel.id === id || this.weeklyLevel.slug === id)) {
+                record = this.weeklyLevel;
+            }
+
+            // Check level-specific cache if not preloaded in memory
+            if (!record || !record.level_data) {
+                const CACHE_KEY = `level_${id}`;
+                const cachedLevel = Cache.get<any>(CACHE_KEY);
+
+                if (cachedLevel) {
+                    record = cachedLevel;
+                } else {
+                    const query = this.communityMode
+                        ? supabase
+                            .from("user_levels")
+                            .select("id, owner_id, title, level_data, published, created_at, updated_at")
+                            .eq("id", id)
+                            .eq("published", true)
+                            .single()
+                        : supabase
+                            .from("levels")
+                            .select("*")
+                            .or(`id.eq.${id},slug.eq.${id}`)
+                            .limit(1)
+                            .single();
+                    const { data, error } = await query;
+
+                    if (error || !data) throw new Error(`Level ${id} not found in Supabase`);
+                    record = data;
+                    Cache.set(CACHE_KEY, record);
+                }
+            }
+
+            if (record === undefined) return;
+
+            this.currentLevelId = record.id;
+            this.currentLevel = record.level_data;
+
+            // DOM & Screen updates
+            const titleEl = document.getElementById("lvl-title");
+            if (titleEl) titleEl.textContent = record.title || `Level ${id}`;
+
+            const idEl = document.getElementById("lvl-id");
+            if (idEl) {
+                const index = this.list.findIndex((l) => l.id === record.id);
+                if (index !== -1) {
+                    const tab = Math.floor(index / 9) + 1;
+                    const slot = (index % 9) + 1;
+                    idEl.textContent = `${tab}.${slot}`;
+                } else {
+                    idEl.textContent = record.slug || "SP";
+                }
+            }
+
+            try { localStorage.setItem("laser.last_level", id); } catch (_e) { }
+
+            // @ts-ignore
+            this.startTime = performance.now();
+            // @ts-ignore
+            this.movesCount = 0;
+            // @ts-ignore
+            this.isPlaying = true;
+
+            if (this.world) {
+                const e = new Entity();
+                e.addComponent(new EventComponent("level:loaded", { id, data: this.currentLevel }));
+                this.world.addEntity(e);
+            }
+
+            return this.currentLevel;
+        } catch (e) {
+            console.warn("SupabaseLevelSystem: loadLevel failed", e);
+            return undefined;
+        }
+    }
+}

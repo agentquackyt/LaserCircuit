@@ -1,0 +1,217 @@
+{
+  "title": "Simply Chaos",
+  "grid": {
+    "width": 8,
+    "height": 8
+  },
+  "emitters": [
+    {
+      "x": 6,
+      "y": 2,
+      "dir": "up",
+      "color": "red"
+    },
+    {
+      "x": 6,
+      "y": 5,
+      "dir": "down",
+      "color": "yellow"
+    }
+  ],
+  "targets": [
+    {
+      "x": 2,
+      "y": 6,
+      "color": "red"
+    },
+    {
+      "x": 0,
+      "y": 5,
+      "color": "orange"
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "color": "yellow"
+    }
+  ],
+  "pieces": [
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 5
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 5,
+      "y": 6
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 3
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 4
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 5
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 6
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 1
+    },
+    {
+      "type": "obstacle",
+      "x": 7,
+      "y": 2
+    },
+    {
+      "type": "obstacle",
+      "x": 6,
+      "y": 4
+    },
+    {
+      "type": "mirror",
+      "x": 6,
+      "y": 7,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 6,
+      "y": 0,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 3,
+      "y": 0,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 3,
+      "y": 7,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "splitter",
+      "x": 3,
+      "y": 3,
+      "orientation": "horizontal",
+      "dir": "right",
+      "rotatable": true
+    },
+    {
+      "type": "splitter",
+      "x": 3,
+      "y": 4,
+      "orientation": "horizontal",
+      "dir": "right",
+      "rotatable": true
+    },
+    {
+      "type": "splitter",
+      "x": 3,
+      "y": 5,
+      "orientation": "horizontal",
+      "dir": "right",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 0,
+      "y": 4,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 1,
+      "y": 3,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 1,
+      "y": 7,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 2,
+      "y": 7,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 2,
+      "y": 5,
+      "orientation": "/",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 2,
+      "y": 0,
+      "orientation": "\\",
+      "rotatable": true
+    },
+    {
+      "type": "mirror",
+      "x": 1,
+      "y": 0,
+      "orientation": "/",
+      "rotatable": true
+    }
+  ],
+  "rules": {
+    "canPlaceOwnBlocks": false
+  },
+  "metadata": {
+    "description": "Turn the mirrors in the correct way to light all targets"
+  }
+}

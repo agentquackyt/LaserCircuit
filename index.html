@@ -7,7 +7,7 @@
   <title>LaserCircuit</title>
   <link rel="stylesheet" href="./css/index.css" />
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=home,replay" />
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=edit_square,home,logout,replay,play_lesson" />
   <script src="./ts/game.ts" defer></script>
   <style>
     .material-symbols-rounded {
@@ -22,24 +22,63 @@
 
 <body>
   <header>
+    <div class="home-navigation hidden" id="home-navigation">
+      <button class="btn-bold btn-basic btn-fill" id="btn-home" title="Main menu">
+        <span class="material-symbols-rounded">home</span>
+      </button>
+    </div>
+    <div class="discord-account data-logged-in hidden">
+      <img src="" alt="Discord" class="discord-picture hidden btn-bold btn-basic btn-fill" draggable="false" />
+    </div>
+    <div class="title-container">
       <h1 class="g-title">LaserCircuit</h1>
+      <span class="g-title-subtitle">by Jonas Gaden</span>
+    </div>
+    <div class="discord-logout data-logged-in hidden">
+      <button class="btn-bold btn-basic btn-fill" id="btn-logout">
+        <span class="material-symbols-rounded">logout</span>
+      </button>
+    </div>
+    <div class="home-navigation hidden" id="home-navigation-counterpart">
+      <button class="btn-bold btn-basic btn-fill" style="opacity: 0; pointer-events: none;" disabled>
+        <span class="material-symbols-rounded">home</span>
+      </button>
+    </div>
+
   </header>
   <section id="title-screen" class="screen space">
     <div class="placeholder">
       <img class="icon" src="./css/maze.png" alt="LaserRay" />
     </div>
     <div class="button-box">
-      <button class="btn-bold btn-tertiary large" id="btn-play">
-        Start Puzzle
+      <button class="btn-bold btn-primary large" id="btn-play">
+        Campaign
       </button>
-      <a class="btn-bold btn-basic large" href="https://stardance.hackclub.com/projects/45734">
-        View Stardance
+      <button class="btn-bold btn-primary large" id="btn-play-discover">
+        Community Levels
+      </button>
+
+      <div class="flex row w-full gap-1">
+        <button class="btn-bold btn-secondary large" id="btn-play-editor" style="width: 100%;">
+          <span class="material-symbols-rounded">edit_square</span>
+          Editor
+        </button>
+        <button class="btn-bold btn-danger large" id="btn-tutorial" style="width: 100%;">
+          <span class="material-symbols-rounded">play_lesson</span>
+          Tutorial
+        </button>
+      </div>
+      <!---
+      <a class="btn-bold btn-basic large" href="https://stardance.hackclub.com/projects/45734" target="_blank"
+        rel="noopener noreferrer">
+        <span class="stardance-label">View Stardance</span>
       </a>
+       -->
     </div>
   </section>
-  <section id="level-screen" class="hidden screen">
-
-  </section>
+  <section id="level-screen" class="hidden screen"></section>
+  <section id="editor-screen" class="hidden screen"></section>
+  <section id="tutorial-screen" class="hidden screen tutorial-screen"></section>
   <main id="game-screen" class="hidden screen">
     <h1><span id="lvl-id">1.1</span> <span id="lvl-title">Circuit</span></h1>
     <p id="status">Loading level...</p>

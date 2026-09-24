@@ -9,6 +9,20 @@ export type LightColor =
     | "purple"
     | "white";
 
+export const LIGHT_COLORS: LightColor[] = ["red", "orange", "yellow", "lime", "green", "cyan", "blue", "purple", "white"];
+
+export const LIGHT_COLOR_HEX: Record<LightColor, string> = {
+    red: "#ff4b4b",
+    orange: "#ff8c3a",
+    yellow: "#ffe45c",
+    lime: "#b4ff3a",
+    green: "#4dff88",
+    cyan: "#62f5ff",
+    blue: "#4da3ff",
+    purple: "#d56bff",
+    white: "#ffffff"
+};
+
 export type Direction = "up" | "right" | "down" | "left";
 
 export type Emitter = { x: number; y: number; dir: Direction; color: LightColor };
@@ -27,6 +41,7 @@ export type SplitterPiece = {
     x: number;
     y: number;
     orientation: "horizontal" | "vertical";
+    dir?: Direction;
     rotatable?: boolean;
 };
 
@@ -172,7 +187,11 @@ export function rotatePiece(piece: LaserPiece): LaserPiece {
         return { ...piece, orientation: piece.orientation === "/" ? "\\" : "/" };
     }
     if (piece.type === "splitter") {
-        return { ...piece, orientation: piece.orientation === "horizontal" ? "vertical" : "horizontal" };
+        return {
+            ...piece,
+            orientation: piece.orientation === "horizontal" ? "vertical" : "horizontal",
+            dir: piece.dir ? rotateDirection(piece.dir) : undefined
+        };
     }
     if (piece.type === "mixer") {
         return { type: "splitter", x: piece.x, y: piece.y, orientation: "horizontal", rotatable: piece.rotatable };
