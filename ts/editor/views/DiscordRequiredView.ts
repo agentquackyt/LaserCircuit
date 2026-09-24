@@ -36,8 +36,12 @@ export class DiscordRequiredView extends View {
         message2.style.fontSize = "1.3rem";
         message2.style.marginBottom = "1.5rem";
         view.appendChild(message2);
+        
+        const basePath = window.location.pathname.startsWith('/LaserCircuit')
+            ? '/LaserCircuit/'
+            : '/';
 
-        const redirectUrl = new URL(window.location.origin);
+        const redirectUrl = new URL(basePath, window.location.origin);
         if (path) {
             redirectUrl.searchParams.set('from', path);
         }
