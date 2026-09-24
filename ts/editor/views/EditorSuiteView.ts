@@ -3,6 +3,7 @@ import type { CommunityLevelRepository } from "../CommunityLevelRepository";
 import { validateUserLevel, type UserLevelDraft } from "../CommunityLevelTypes";
 import { EditorGameView, type EditorTool, type PieceOrientation } from "./EditorGameView";
 import { LIGHT_COLOR_HEX, LIGHT_COLORS, type Direction, type LightColor } from "../../utils/LaserLogic";
+import { CommonUI } from "../../utils/CommonUI";
 
 const TOOLS: Array<{ name: EditorTool; label: string; shortcut: string }> = [
     { name: "select", label: "Select", shortcut: "1" },
@@ -20,6 +21,7 @@ export class EditorSuiteView extends View {
     private readonly status: HTMLElement;
     private readonly validation: HTMLElement;
     private readonly board: EditorGameView;
+    private shareButton?: HTMLButtonElement;
     private saveTimer?: ReturnType<typeof setTimeout>;
     private activeColor: LightColor = "red";
     private orientationSelect?: HTMLSelectElement;
@@ -46,6 +48,19 @@ export class EditorSuiteView extends View {
             })
             .build();
         header.appendChild(publishButton);
+        const shareButton = new ButtonBuilder()
+            .setText("Copy link")
+            .setBold(ButtonFlavour.SECONDARY)
+            .setClass("community-editor-share-button")
+            .setOnClick(() => void this.copyLink(shareButton))
+            .build();
+        const shareIcon = document.createElement("span");
+        shareIcon.className = "material-symbols-rounded";
+        shareIcon.textContent = "link";
+        shareButton.prepend(shareIcon);
+        shareButton.disabled = !this.level.id || !this.level.published;
+        this.shareButton = shareButton;
+        header.appendChild(shareButton);
         header.appendChild(new ButtonBuilder().setText("Save").setBold(ButtonFlavour.PRIMARY).setOnClick(() => this.save()).build());
             const uploadInput = document.createElement("input");
             uploadInput.type = "file";
@@ -258,10 +273,30 @@ export class EditorSuiteView extends View {
         try {
             this.level = await this.repository.saveLevel(this.level);
             this.board.setLevel(this.level);
+            if (this.shareButton) this.shareButton.disabled = !this.level.id || !this.level.published;
             this.status.textContent = "Saved";
         } catch (error) {
             console.error("Error saving community level:", error);
             this.status.textContent = "Save failed";
+        }
+    }
+
+    private async copyLink(button: HTMLButtonElement): Promise<void> {
+        if (!this.level.id || !this.level.published) return;
+        const url = new URL(window.location.href);
+        url.search = "";
+        url.hash = "";
+        url.searchParams.set("community", this.level.id);
+        try {
+            await navigator.clipboard.writeText(url.toString());
+            button.lastChild!.textContent = "Copied";
+            CommonUI.pushNotification("Level link copied to clipboard.", "success", 1800);
+            window.setTimeout(() => {
+                if (button.lastChild) button.lastChild.textContent = "Copy link";
+            }, 1500);
+        } catch (error) {
+            console.error("Could not copy community level link:", error);
+            this.status.textContent = "Copy failed";
         }
     }
 

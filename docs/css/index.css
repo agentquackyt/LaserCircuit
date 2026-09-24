@@ -402,6 +402,18 @@ body:not(#title-screen.hidden) .highscore-box {
   margin-right: auto;
 }
 
+.community-editor-share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.community-editor-share-button .material-symbols-rounded {
+  line-height: 1;
+  font-size: 1.2rem;
+}
+
 .community-editor-workspace {
   width: 100%;
   min-width: 0;

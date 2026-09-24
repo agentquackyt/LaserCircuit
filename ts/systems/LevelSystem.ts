@@ -129,6 +129,7 @@ export class LevelSystem<T = unknown> extends EntitySystem {
     public handleLevelCompletion(): void {
         if (!this.isPlaying || !this.currentLevelId) return;
         this.isPlaying = false;
+        this.clearCommunityLevelParam();
 
         const timeMs = Math.max(100, performance.now() - this.startTime);
         const isNewRecord = HighscoreSystem.saveScore(this.currentLevelId, timeMs, this.movesCount);
@@ -272,6 +273,7 @@ export class LevelSystem<T = unknown> extends EntitySystem {
 
         document.getElementById("completion-btn-menu")?.addEventListener("click", () => {
             if (dialog && typeof dialog.close === "function") dialog.close();
+            this.clearCommunityLevelParam();
             if (gameScreenEl) gameScreenEl.classList.add("hidden");
             if (levelScreen) levelScreen.classList.remove("hidden");
             this.renderActiveLevelList();
@@ -304,6 +306,7 @@ export class LevelSystem<T = unknown> extends EntitySystem {
             }
 
             if (gameScreenEl) gameScreenEl.classList.add("hidden");
+            this.clearCommunityLevelParam();
             if (levelScreen) levelScreen.classList.remove("hidden");
             this.renderActiveLevelList();
         });
@@ -328,6 +331,13 @@ export class LevelSystem<T = unknown> extends EntitySystem {
         if (dialog && typeof dialog.showModal === "function") {
             dialog.showModal();
         }
+    }
+
+    private clearCommunityLevelParam(): void {
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has("community")) return;
+        url.searchParams.delete("community");
+        window.history.replaceState({}, document.title, url.toString());
     }
 }
 
