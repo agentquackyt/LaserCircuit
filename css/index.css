@@ -326,7 +326,6 @@ body:not(#title-screen.hidden) .highscore-box {
   color: inherit;
   font: inherit;
   line-height: inherit;
-  transform: translateY(0.25rem);
 }
 
 @media (min-width: 768px) {
@@ -564,6 +563,10 @@ body:not(#title-screen.hidden) .highscore-box {
 
   .community-editor-board {
     width: min(94vw, 720px);
+  }
+
+  .button-box .w-full {
+    flex: 0 !important;
   }
 }
 

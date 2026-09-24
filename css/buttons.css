@@ -117,6 +117,7 @@ button.shadow {
     flex-direction: column;
     gap: .75rem;
     width: 100%;
+    flex-grow: 1;
 }
 
 
@@ -179,4 +180,10 @@ label {
     flex-direction: column;
     gap: .25rem;
     flex: 1;
+}
+
+a.btn-bold {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
