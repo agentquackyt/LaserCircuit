@@ -63,7 +63,8 @@ export class DiscordRequiredView extends View {
             .setBold(ButtonFlavour.BASIC)
             .setText("Back to Home")
             .setOnClick(() => {
-                window.location.href = "/";
+                //reload the page
+                window.navigation.reload();
             })
             .build();
 
