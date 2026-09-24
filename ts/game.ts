@@ -162,6 +162,10 @@ function checkParams() {
 	const urlParams = new URLSearchParams(window.location.search);
 	const fromParam = urlParams.get('from');
 	// strip the query params from the URL to avoid repeated actions on refresh
+
+    const redirectUrl = new URL(window.location.toString());
+	console.log('Current URL:', redirectUrl.toString());
+
 	if (fromParam) {
 		const newUrl = window.location.origin + window.location.pathname;
 		window.history.replaceState({}, document.title, newUrl);
