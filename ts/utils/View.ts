@@ -1,4 +1,4 @@
-export class View {
+export abstract class View {
     private element: HTMLElement;
     private triggers: { [key: string]: (data: any) => void } = {};
 
@@ -47,48 +47,70 @@ export enum ButtonFlavour {
     ERROR
 }
 
-export class ButtonBuilder {
-    private button: HTMLButtonElement;
 
-    constructor() {
-        this.button = document.createElement("button");
+abstract class Builder<T extends HTMLElement> {
+    protected element: T;
+
+    constructor(element: T) {
+        this.element = element;
     }
 
-    setText(text: string): ButtonBuilder {
-        this.button.textContent = text;
-        return this;
-    }
-
-    setClass(...additionalClasses: string[]): ButtonBuilder {
+    setClass(...additionalClasses: string[]): this {
         for (const cls of additionalClasses) {
-            this.button.classList.add(cls);
+            this.element.classList.add(cls);
         }
         return this;
     }
 
-    addDataAttribute(key: string, value: string): ButtonBuilder {
-        this.button.dataset[key] = value;
+    addDataAttribute(key: string, value: string): this {
+        this.element.dataset[key] = value;
+        return this;
+    }
+
+    addStyle(style: Partial<CSSStyleDeclaration>): this {
+        Object.assign(this.element.style, style);
+        return this;
+    }
+
+    addCSSVariable(key: string, value: string): this {
+        this.element.style.setProperty(key, value);
+        return this;
+    }
+
+    build(): T {
+        return this.element;
+    }
+}
+
+export class ButtonBuilder extends Builder<HTMLButtonElement> {
+
+    constructor() {
+        super(document.createElement("button"));
+    }
+
+    setText(text: string): ButtonBuilder {
+        this.element.textContent = text;
         return this;
     }
 
     setBold(flavour?: ButtonFlavour): ButtonBuilder {
-        this.button.classList.add("btn-bold");
+        this.element.classList.add("btn-bold");
         if(flavour !== undefined) {
             switch(flavour) {
                 case ButtonFlavour.PRIMARY:
-                    this.button.classList.add("btn-primary");
+                    this.element.classList.add("btn-primary");
                     break;
                 case ButtonFlavour.SECONDARY:
-                    this.button.classList.add("btn-secondary");
+                    this.element.classList.add("btn-secondary");
                     break;
                 case ButtonFlavour.TERTIARY:
-                    this.button.classList.add("btn-tertiary");
+                    this.element.classList.add("btn-tertiary");
                     break;
                 case ButtonFlavour.BASIC:
-                    this.button.classList.add("btn-basic");
+                    this.element.classList.add("btn-basic");
                     break;
                 case ButtonFlavour.ERROR:
-                    this.button.classList.add("btn-danger");
+                    this.element.classList.add("btn-danger");
                     break;
             }
         }
@@ -96,63 +118,56 @@ export class ButtonBuilder {
     }
 
     setOnClick(callback: () => void): ButtonBuilder {
-        this.button.addEventListener("click", callback);
+        this.element.addEventListener("click", callback);
         return this;
-    }
-
-
-    addStyle(style: Partial<CSSStyleDeclaration>): ButtonBuilder {
-        Object.assign(this.button.style, style);
-        return this;
-    }
-
-    addCSSVariable(key: string, value: string): ButtonBuilder {
-        this.button.style.setProperty(key, value);
-        return this;
-    }
-
-    build(): HTMLButtonElement {
-        return this.button;
     }
 }
 
-export class ContainerBuilder {
-    private container: HTMLDivElement;
-
+export class ContainerBuilder extends Builder<HTMLDivElement> {
     constructor() {
-        this.container = document.createElement("div");
+        super(document.createElement("div"));
     }
 
     setFlex(direction: "row" | "column", gap: number): ContainerBuilder {
-        this.container.classList.add("flex", direction, `gap-${gap}`);
-        return this;
-    }
-
-    setClass(className: string, ...additionalClasses: string[]): ContainerBuilder {
-        this.container.className = className;
-        for (const cls of additionalClasses) {
-            this.container.classList.add(cls);
-        }
+        this.element.classList.add("flex", direction, `gap-${gap}`);
         return this;
     }
 
     appendChild(child: HTMLElement): ContainerBuilder {
-        this.container.appendChild(child);
+        this.element.appendChild(child);
         return this;
     }
+}
 
-    addStyle(style: Partial<CSSStyleDeclaration>): ContainerBuilder {
-        Object.assign(this.container.style, style);
-        return this;
+export enum TextType {
+    TEXT,
+    HEADER,
+    SUBHEADER,
+    NOTICE
+}
+
+export class TextBuilder extends Builder<HTMLElement> {
+
+    constructor(type: TextType = TextType.TEXT) {
+        switch (type) {
+            case TextType.TEXT:
+                super(document.createElement("p"));
+                break;
+            case TextType.HEADER:
+                super(document.createElement("h2"));
+                break;
+            case TextType.SUBHEADER:
+                super(document.createElement("h3"));
+                break;
+            case TextType.NOTICE:
+                super(document.createElement("span"));
+                this.element.classList.add("notice");
+                break;
+        }
     }
 
-
-    addCSSVariable(key: string, value: string): ContainerBuilder {
-        this.container.style.setProperty(key, value);
+    setText(text: string): TextBuilder {
+        this.element.textContent = text;
         return this;
-    }
-
-    build(): HTMLDivElement {
-        return this.container;
     }
 }

@@ -32,8 +32,8 @@
     margin: 0 auto;
   }
 
-  .screen:not(#editor-screen) {
-    max-width: 650px;
+  .screen:not(#editor-screen, #tutorial-screen) {
+    max-width: 800px;
     margin: 0 auto;
   }
 }

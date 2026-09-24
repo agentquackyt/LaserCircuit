@@ -2,6 +2,9 @@
 @import url('./buttons.css');
 @import url('./dialog.css');
 
+
+@import url('./views/tutorial.css');
+
 body {
   margin: 0;
   min-height: 100dvh;
@@ -212,13 +215,24 @@ header {
   gap: 0.75rem;
 }
 
+#game-screen .game-board-holder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  object-fit: scale-down;
+  margin: auto;
+  max-width: 100%;
+}
+
 #game-screen canvas.game-board {
-  display: block;
-  width: min(92vmin, 680px);
-  height: min(92vmin, 680px);
-  border-radius: 18px;
-  background: linear-gradient(180deg, #363c47 0%, #2b313b 100%);
-  box-shadow: 0 30px 70px rgba(18, 22, 28, 0.22);
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 1rem;
 }
 
 #game-screen h1,
@@ -237,7 +251,7 @@ header {
 .complete-container {
   display: flex;
   justify-content: center;
-  height: 3rem;
+  height: 4.5rem;
 } 
 
 #completion-dialog {
@@ -310,6 +324,7 @@ body:not(#title-screen.hidden) .highscore-box {
 
 #title-screen #btn-play-discover,
 #title-screen #btn-play-editor,
+#title-screen #btn-tutorial,
 #title-screen .button-box > a {
   display: inline-flex;
   align-items: center;

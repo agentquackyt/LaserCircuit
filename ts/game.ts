@@ -6,16 +6,26 @@ import { SupabaseLevelSystem } from "./systems/LevelSystem";
 import { CommunityLevelEditor } from "./editor/CommunityLevelEditor";
 import { supabase } from "./database/supabase";
 import { DiscordRequiredView } from "./editor/views/DiscordRequiredView";
+import { TutorialManager } from "./systems/TutorialManager";
 
 const engine = Engine.getInstance();
 const world = engine.world;
 
-// Create canvas inside the #game-screen element
-const gameScreen = document.querySelector(".complete-container") as HTMLElement | null;
+// Create the square game board inside the #game-screen element
+const gameScreen = document.querySelector("#game-screen") as HTMLElement | null;
+let completeContainer = gameScreen?.querySelector(".complete-container") as HTMLElement | null;
+if (!completeContainer && gameScreen) {
+	completeContainer = document.createElement("div");
+	completeContainer.className = "complete-container";
+	gameScreen.appendChild(completeContainer);
+}
+const gameBoardHolder = document.createElement("div");
+gameBoardHolder.className = "game-board-holder";
 const canvas = document.createElement("canvas");
 canvas.className = "game-board";
 canvas.style.display = "block";
-if (gameScreen) gameScreen.before(canvas);
+gameBoardHolder.appendChild(canvas);
+completeContainer?.before(gameBoardHolder);
 
 // Initialize systems
 const grid = new GridRendererSystem(canvas, 9, 9, 6, 8);
@@ -35,6 +45,7 @@ world.addEntitySystem(highs);
 const titleScreen = document.querySelector("#title-screen") as HTMLElement | null;
 const levelScreen = document.querySelector("#level-screen") as HTMLElement | null;
 const editorScreen = document.querySelector("#editor-screen") as HTMLElement | null;
+const tutorialScreen = document.querySelector("#tutorial-screen") as HTMLElement | null;
 let levelSystem: SupabaseLevelSystem | null = null;
 let levelSystemRegistered = false;
 
@@ -50,6 +61,7 @@ document.querySelectorAll<HTMLImageElement>(".discord-picture").forEach((image) 
 function showMainMenu() {
 	levelScreen?.classList.add("hidden");
 	editorScreen?.classList.add("hidden");
+	tutorialScreen?.classList.add("hidden");
 	editorScreen!.innerHTML = ""; // Clear editor screen to reset state
 	document.querySelector("#game-screen")?.classList.add("hidden");
 	document.querySelector<HTMLDialogElement>("#completion-dialog")?.close();
@@ -67,6 +79,7 @@ async function startGame() {
 	// show level screen
 	if (titleScreen) titleScreen.classList.add("hidden");
 	if (levelScreen) levelScreen.classList.remove("hidden");
+	if (tutorialScreen) tutorialScreen.classList.add("hidden");
 
 	// Load level list and render 3x3 tabbed grid
 	await levelSystem.loadList();
@@ -83,6 +96,7 @@ async function startDiscover() {
 
 	if (titleScreen) titleScreen.classList.add("hidden");
 	if (editorScreen) editorScreen.classList.add("hidden");
+	if (tutorialScreen) tutorialScreen.classList.add("hidden");
 	if (levelScreen) levelScreen.classList.remove("hidden");
 
 	await levelSystem.loadPublishedCommunityLevels();
@@ -92,6 +106,7 @@ async function startDiscover() {
 async function startEditor() {
 	if (titleScreen) titleScreen.classList.add("hidden");
 	if (levelScreen) levelScreen.classList.add("hidden");
+	if (tutorialScreen) tutorialScreen.classList.add("hidden");
 	if (editorScreen) editorScreen.classList.remove("hidden");
 	let isLoggedIn = await loginWithDiscord();
 	if (!isLoggedIn) return; // If not logged in, don't proceed
@@ -178,3 +193,4 @@ function checkParams() {
 
 checkAuth();
 checkParams();
+TutorialManager.getInstance().runTutorial();

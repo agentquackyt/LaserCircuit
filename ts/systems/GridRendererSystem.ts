@@ -30,10 +30,15 @@ type GridLayout = {
     cellH: number;
 };
 
+const ARROW_RIGHT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e3e3e3"><path d="M627.33-427.67h-443q-22 0-37.16-15.16Q132-458 132-480t15.17-37.17q15.16-15.16 37.16-15.16h443L443-716.67q-15.67-15.66-16-37.33-.33-21.67 15.33-38Q458-807.33 480-807q22 .33 37.67 16L791-517.67q7.67 7.67 12 17.67 4.33 10 4.33 20T803-460q-4.33 10-12 17.67L516.67-168.67q-16.34 16.34-37.5 16.34-21.17 0-36.84-16.34-15.66-15.66-15.66-37 0-21.33 15.66-37l185-185Z"/></svg>`;
+
 export class GridRendererSystem extends TickSystem {
     private readonly ctx: CanvasRenderingContext2D;
     private readonly canvas: HTMLCanvasElement;
     private readonly resizeObserver?: ResizeObserver;
+    private readonly resizeHandler: () => void;
+    private resizeObserverFrame?: number;
+    private emitterArrowPath?: Path2D;
     private width: number;
     private height: number;
     private padding: number;
@@ -66,14 +71,20 @@ export class GridRendererSystem extends TickSystem {
         this.radius = radius;
         this.completeButton?.addEventListener("click", () => this.showCompletionDialog());
 
-        const refresh = () => {
+        this.resizeHandler = () => {
             this.refresh();
         };
-        refresh();
-        window.addEventListener("resize", refresh);
+        this.resizeHandler();
+        window.addEventListener("resize", this.resizeHandler);
         if (typeof ResizeObserver !== "undefined") {
-            this.resizeObserver = new ResizeObserver(refresh);
-            this.resizeObserver.observe(canvas);
+            this.resizeObserver = new ResizeObserver(() => {
+                if (this.resizeObserverFrame !== undefined) return;
+                this.resizeObserverFrame = requestAnimationFrame(() => {
+                    this.resizeObserverFrame = undefined;
+                    this.resizeHandler();
+                });
+            });
+            this.resizeObserver.observe(canvas.parentElement ?? canvas);
         }
     }
 
@@ -125,6 +136,16 @@ export class GridRendererSystem extends TickSystem {
         return this.canvasToCell(canvasX, canvasY);
     }
 
+    handleCanvasClick(canvasX?: number, canvasY?: number, button = 0): void {
+        this.handleCanvasClickInternal(canvasX, canvasY, button);
+    }
+
+    dispose(): void {
+        window.removeEventListener("resize", this.resizeHandler);
+        this.resizeObserver?.disconnect();
+        if (this.resizeObserverFrame !== undefined) cancelAnimationFrame(this.resizeObserverFrame);
+    }
+
     onEntityAdded(entity: Entity): void {
         const ev = entity.getComponent(EventComponent);
         if (!ev) return;
@@ -133,7 +154,7 @@ export class GridRendererSystem extends TickSystem {
             return;
         }
         if (ev.type === "canvas:click") {
-            this.handleCanvasClick(ev.payload?.canvasX, ev.payload?.canvasY, ev.payload?.button);
+            this.handleCanvasClickInternal(ev.payload?.canvasX, ev.payload?.canvasY, ev.payload?.button);
         }
     }
 
@@ -197,7 +218,7 @@ export class GridRendererSystem extends TickSystem {
         if (!this.completionDialog.open) this.completionDialog.showModal();
     }
 
-    private handleCanvasClick(canvasX?: number, canvasY?: number, button = 0) {
+    private handleCanvasClickInternal(canvasX?: number, canvasY?: number, button = 0) {
         if (typeof canvasX !== "number" || typeof canvasY !== "number") return;
         const cell = this.canvasToCell(canvasX, canvasY);
         if (!cell) return;
@@ -397,7 +418,6 @@ export class GridRendererSystem extends TickSystem {
 
         const coreWidth = Math.max(2.2, Math.min(cellW, cellH) * 0.13);
         ctx.save();
-        ctx.lineCap = "round";
         for (const mixed of mixBySegment.values()) {
             const x1 = this.centerX(mixed.x1, originX, cellW);
             const y1 = this.centerY(mixed.y1, originY, cellH);
@@ -407,13 +427,7 @@ export class GridRendererSystem extends TickSystem {
             const intensity = Math.min(1, 0.62 + (mixed.count - 1) * 0.1);
 
             ctx.strokeStyle = color;
-            ctx.globalAlpha = 0.1 * intensity;
-            ctx.lineWidth = coreWidth * 2.8;
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-
+            ctx.lineCap = "butt";
             ctx.globalAlpha = 0.34 * intensity;
             ctx.lineWidth = coreWidth * 1.7;
             ctx.beginPath();
@@ -422,6 +436,7 @@ export class GridRendererSystem extends TickSystem {
             ctx.stroke();
 
             ctx.globalAlpha = 0.92;
+            ctx.lineCap = "round";
             ctx.lineWidth = coreWidth;
             ctx.beginPath();
             ctx.moveTo(x1, y1);
@@ -446,8 +461,18 @@ export class GridRendererSystem extends TickSystem {
             const accent = this.pieceAccentColor(piece);
             const glyph = this.pieceGlyph(piece);
 
-            ctx.fillStyle = accent;
-            ctx.fillText(glyph, cx, cy + 1);
+            if (piece.type === "mirror") {
+                this.renderMirrorGlyph(ctx, cx, cy, cellW, cellH, piece.orientation, accent);
+                ctx.restore();
+                continue;
+            }
+
+            if (piece.type === "splitter") {
+                this.renderSplitterGlyph(ctx, cx, cy, cellW, cellH, accent);
+            } else {
+                ctx.fillStyle = accent;
+                ctx.fillText(glyph, cx, cy + 1);
+            }
 
             if (piece.type === "splitter" && piece.dir) {
                 ctx.shadowBlur = 0;
@@ -466,28 +491,107 @@ export class GridRendererSystem extends TickSystem {
         }
     }
 
+    private renderMirrorGlyph(
+        ctx: CanvasRenderingContext2D,
+        cx: number,
+        cy: number,
+        cellW: number,
+        cellH: number,
+        orientation: "/" | "\\",
+        accent: string
+    ): void {
+        const symbolScale = 0.8;
+        const length = Math.min(cellW, cellH) * 0.68;
+        const halfLength = length / 2;
+        const x1 = -halfLength;
+        const x2 = halfLength;
+        const y1 = orientation === "/" ? halfLength : -halfLength;
+        const y2 = orientation === "/" ? -halfLength : halfLength;
+
+        ctx.translate(cx, cy);
+        ctx.scale(symbolScale, symbolScale);
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#424956";
+        ctx.lineWidth = Math.max(8, Math.min(cellW, cellH) * 0.2);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = Math.max(4, Math.min(cellW, cellH) * 0.1);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    private renderSplitterGlyph(
+        ctx: CanvasRenderingContext2D,
+        cx: number,
+        cy: number,
+        cellW: number,
+        cellH: number,
+        accent: string
+    ): void {
+        const symbolScale = 0.8;
+        const arm = Math.min(cellW, cellH) * 0.28;
+        ctx.translate(cx, cy);
+        ctx.scale(symbolScale, symbolScale);
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "#424956";
+        ctx.lineWidth = Math.max(8, Math.min(cellW, cellH) * 0.2);
+        ctx.beginPath();
+        ctx.moveTo(-arm, 0);
+        ctx.lineTo(arm, 0);
+        ctx.moveTo(0, -arm);
+        ctx.lineTo(0, arm);
+        ctx.stroke();
+
+        ctx.strokeStyle = accent;
+        ctx.lineWidth = Math.max(4, Math.min(cellW, cellH) * 0.1);
+        ctx.beginPath();
+        ctx.moveTo(-arm, 0);
+        ctx.lineTo(arm, 0);
+        ctx.moveTo(0, -arm);
+        ctx.lineTo(0, arm);
+        ctx.stroke();
+    }
+
     private renderEmitters(originX: number, originY: number, cellW: number, cellH: number) {
         const ctx = this.ctx;
         for (const emitter of this.emitters) {
             const cx = this.centerX(emitter.x, originX, cellW);
             const cy = this.centerY(emitter.y, originY, cellH);
+            const emitterX = cx - cellW * 0.4;
+            const emitterY = cy - cellH * 0.4;
+            const emitterW = cellW * 0.8;
+            const emitterH = cellH * 0.8;
+            const emitterRadius = Math.min(cellW, cellH) * 0.2;
+            const emitterColor = this.toCssColor(emitter.color);
+            const borderColor = `color-mix(in srgb, ${emitterColor} 70%, #202020 30%)`;
             ctx.save();
-            ctx.shadowColor = this.toCssColor(emitter.color);
+            ctx.shadowColor = emitterColor;
             ctx.shadowBlur = 5;
-            ctx.fillStyle = this.toCssColor(emitter.color);
-            this.roundRect(ctx, cx - cellW * 0.4, cy - cellH * 0.4, cellW * 0.8, cellH * 0.8, Math.min(cellW, cellH) * 0.2);
+            ctx.fillStyle = emitterColor;
+            this.roundRect(ctx, emitterX, emitterY, emitterW, emitterH, emitterRadius);
             ctx.fill();
 
             ctx.shadowBlur = 0;
-            ctx.strokeStyle = "rgba(255,255,255,0.45)";
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = 3;
             ctx.stroke();
 
-            ctx.fillStyle = "#dbdbdb";
-            ctx.font = `${Math.max(20, Math.floor(Math.min(cellW, cellH) * 0.5))}px "Google Sans", sans-serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(this.dirSymbol(emitter.dir), cx, cy + 1);
+            const arrowPath = this.getEmitterArrowPath();
+            if (arrowPath) {
+                const arrowSize = Math.min(cellW, cellH) * 0.72;
+                ctx.translate(cx, cy);
+                ctx.rotate(this.directionAngle(emitter.dir));
+                ctx.scale(arrowSize / 960, arrowSize / 960);
+                ctx.translate(-480, 480);
+                ctx.fillStyle = `color-mix(in srgb, ${this.toCssColor(emitter.color)} 70%, #202020 30%)`;
+                ctx.fill(arrowPath);
+            }
             ctx.restore();
         }
     }
@@ -584,6 +688,21 @@ export class GridRendererSystem extends TickSystem {
         if (dir === "right") return "⇨";
         if (dir === "down") return "⇩";
         return "⇦";
+    }
+
+    private getEmitterArrowPath(): Path2D | undefined {
+        if (this.emitterArrowPath) return this.emitterArrowPath;
+        const pathData = ARROW_RIGHT_SVG.match(/<path[^>]*d="([^"]+)"/)?.[1];
+        if (!pathData) return undefined;
+        this.emitterArrowPath = new Path2D(pathData);
+        return this.emitterArrowPath;
+    }
+
+    private directionAngle(dir: AdderPiece["dir"]): number {
+        if (dir === "up") return -Math.PI / 2;
+        if (dir === "down") return Math.PI / 2;
+        if (dir === "left") return Math.PI;
+        return 0;
     }
 
     private toCssColor(color: LightColor): string {
