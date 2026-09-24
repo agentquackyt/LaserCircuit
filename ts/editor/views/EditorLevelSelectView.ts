@@ -3,49 +3,60 @@ import type { UserLevelDraft } from "../CommunityLevelTypes";
 
 export class LevelSelectView extends View {
     constructor(data?: any, levels: UserLevelDraft[] = []) {
-
-        const section_1 = new ContainerBuilder()
-            .setFlex("column", 1)
-            .addStyle({
-                justifyContent: "center",
-                alignItems: "center",
-                alignSelf: "center",
-                gap: ".5rem",
-                height: "100%",
-                margin: "auto"
-            });
-
-        const header = document.createElement("h2");
-        console.log("User data:", data);
+        const view = new ContainerBuilder().setClass("editor-level-select", "column");
+        const header = new ContainerBuilder().setClass("editor-level-select-header", "column");
+        const title = document.createElement("h2");
         const username = data?.user_metadata?.full_name || data?.email?.split("@")[0] || "friend";
-
-        header.textContent = `Welcome back, @${username}!`;
-        section_1.appendChild(header);
-
-        const section_2 = new ContainerBuilder().setFlex("column", 1);
+        title.textContent = `Welcome back, @${username}!`;
+        header.appendChild(title);
+        const subtitle = document.createElement("p");
+        subtitle.textContent = "Create, refine, and publish your community levels.";
+        header.appendChild(subtitle);
+        view.appendChild(header.build());
 
         const newLevelBtn = new ButtonBuilder()
             .setText("Create New Level")
             .setBold(ButtonFlavour.BASIC)
             .setOnClick(() => {this.invokeTrigger("levelSelected", "new")})
             .build();
+        const actions = new ContainerBuilder().setClass("editor-level-select-actions", "row");
+        actions.appendChild(newLevelBtn);
+        const backButton = new ButtonBuilder()
+            .setText("Back to Menu")
+            .setBold(ButtonFlavour.BASIC)
+            .setOnClick(() => {this.invokeTrigger("back")})
+            .build();
+        actions.appendChild(backButton);
+        view.appendChild(actions.build());
 
-        section_2.appendChild(newLevelBtn);
+        const results = new ContainerBuilder().setClass("editor-level-results");
         for (const level of levels) {
             if (!level.id) continue;
+            const updated = level.updatedAt
+                ? `Updated ${new Date(level.updatedAt).toLocaleDateString()}`
+                : "Not saved yet";
+            const status = level.published ? "Published" : "Draft";
             const levelBtn = new ButtonBuilder()
-                .setText(level.title)
-                .setBold(ButtonFlavour.PRIMARY)
+                .setBold(level.published ? ButtonFlavour.SECONDARY : ButtonFlavour.BASIC)
+                .setClass("editor-level-card")
                 .addDataAttribute("levelId", level.id)
                 .setOnClick(() => {this.invokeTrigger("levelSelected", level.id)})
                 .build();
-            section_2.appendChild(levelBtn);
+            const levelTitle = document.createElement("strong");
+            levelTitle.textContent = level.title;
+            const metadata = document.createElement("small");
+            metadata.textContent = `${status} | ${level.document.grid?.width ?? 0} x ${level.document.grid?.height ?? 0} grid | ${updated}`;
+            levelBtn.append(levelTitle, metadata);
+            results.appendChild(levelBtn);
         }
 
-        const view = document.createElement("div");
-        view.appendChild(section_1.build());
-        view.appendChild(section_2.build());
-        view.className = "w-full gap-1 column";
-        super(view);
+        if (levels.length === 0) {
+            const empty = document.createElement("p");
+            empty.className = "editor-level-empty";
+            empty.textContent = "You have not created any levels yet.";
+            results.appendChild(empty);
+        }
+        view.appendChild(results.build());
+        super(view.build());
     }
 }

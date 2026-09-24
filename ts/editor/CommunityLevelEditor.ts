@@ -57,7 +57,15 @@ export class CommunityLevelEditor {
         levelSelectView.addTrigger("levelSelected", (levelId: string) => {
             this.loadLevel(levelId);
         });
+        levelSelectView.addTrigger("back", () => this.backToMenu());
         levelSelectView.attachTo(this._targetScreen);
+    }
+
+    private backToMenu(): void {
+        this._levelSelectView?.detach();
+        this._editorSuiteView?.detach();
+        this._targetScreen.classList.add("hidden");
+        document.querySelector("#title-screen")?.classList.remove("hidden");
     }
 
     private async loadLevel(levelId: string) {
