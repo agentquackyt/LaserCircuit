@@ -8,7 +8,7 @@ export class CommunityLevelRepository {
     async listOwnedLevels(ownerId: string): Promise<UserLevelDraft[]> {
         const { data, error } = await supabase
             .from(USER_LEVEL_TABLE)
-            .select("id, owner_id, title, name, level_data, data, published, updated_at")
+            .select("id, owner_id, title, level_data, published, created_at, updated_at")
             .eq("owner_id", ownerId)
             .order("updated_at", { ascending: false });
         if (error) throw error;
@@ -18,7 +18,7 @@ export class CommunityLevelRepository {
     async getLevel(id: string, ownerId: string): Promise<UserLevelDraft> {
         const { data, error } = await supabase
             .from(USER_LEVEL_TABLE)
-            .select("id, owner_id, title, name, level_data, data, published, updated_at")
+            .select("id, owner_id, title, level_data, published, created_at, updated_at")
             .eq("id", id)
             .eq("owner_id", ownerId)
             .single();

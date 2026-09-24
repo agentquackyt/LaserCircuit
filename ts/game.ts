@@ -5,7 +5,6 @@ import { HighscoreSystem } from "./systems/HighscoreSystem";
 import { SupabaseLevelSystem } from "./systems/LevelSystem";
 import { CommunityLevelEditor } from "./editor/CommunityLevelEditor";
 import { supabase } from "./database/supabase";
-import { ButtonBuilder } from "./utils/View";
 import { DiscordRequiredView } from "./editor/views/DiscordRequiredView";
 
 const engine = Engine.getInstance();
@@ -36,13 +35,33 @@ world.addEntitySystem(highs);
 const titleScreen = document.querySelector("#title-screen") as HTMLElement | null;
 const levelScreen = document.querySelector("#level-screen") as HTMLElement | null;
 const editorScreen = document.querySelector("#editor-screen") as HTMLElement | null;
+let levelSystem: SupabaseLevelSystem | null = null;
+let levelSystemRegistered = false;
 
 document.querySelector("#btn-play")!.addEventListener("click", startGame);
+document.querySelector("#btn-play-discover")!.addEventListener("click", startDiscover);
 document.querySelector("#btn-play-editor")!.addEventListener("click", startEditor);
 document.querySelector("#btn-logout")!.addEventListener("click", logout);
+document.querySelector("#btn-home")!.addEventListener("click", showMainMenu);
+document.querySelectorAll<HTMLImageElement>(".discord-picture").forEach((image) => {
+	image.addEventListener("click", showMainMenu);
+});
+
+function showMainMenu() {
+	levelScreen?.classList.add("hidden");
+	editorScreen?.classList.add("hidden");
+	editorScreen!.innerHTML = ""; // Clear editor screen to reset state
+	document.querySelector("#game-screen")?.classList.add("hidden");
+	document.querySelector<HTMLDialogElement>("#completion-dialog")?.close();
+	titleScreen?.classList.remove("hidden");
+}
+
 async function startGame() {
-	const levelSystem = new SupabaseLevelSystem();
-	world.addEntitySystem(levelSystem);
+	levelSystem ??= new SupabaseLevelSystem();
+	if (!levelSystemRegistered) {
+		world.addEntitySystem(levelSystem);
+		levelSystemRegistered = true;
+	}
 	engine.start();
 
 	// show level screen
@@ -52,6 +71,22 @@ async function startGame() {
 	// Load level list and render 3x3 tabbed grid
 	await levelSystem.loadList();
 	levelSystem.renderLevelScreen();
+}
+
+async function startDiscover() {
+	levelSystem ??= new SupabaseLevelSystem();
+	if (!levelSystemRegistered) {
+		world.addEntitySystem(levelSystem);
+		levelSystemRegistered = true;
+	}
+	engine.start();
+
+	if (titleScreen) titleScreen.classList.add("hidden");
+	if (editorScreen) editorScreen.classList.add("hidden");
+	if (levelScreen) levelScreen.classList.remove("hidden");
+
+	await levelSystem.loadPublishedCommunityLevels();
+	levelSystem.renderDiscoverScreen();
 }
 
 async function startEditor() {
@@ -71,6 +106,7 @@ supabase.auth.onAuthStateChange((event, session) => {
 		// - full_name / name
 		// - avatar_url
 		// - custom_claims (e.g. Discord username / discriminator)
+		checkAuth(); // Update UI after login
 	}
 
 	if (event === 'SIGNED_OUT') {
@@ -103,6 +139,8 @@ async function checkAuth() {
 		console.log('No valid session or session expired:', error?.message);
 		document.querySelectorAll(".discord-picture")!.forEach((img) => img.classList.add("hidden"));
 		document.querySelectorAll(".data-logged-in")!.forEach((el) => el.classList.add("hidden"));
+		document.querySelector("#home-navigation")?.classList.remove("hidden");
+		document.querySelector("#home-navigation-counterpart")?.classList.remove("hidden");
 		return false;
 	}
 
@@ -112,6 +150,8 @@ async function checkAuth() {
 	});
 
 	document.querySelectorAll(".data-logged-in")!.forEach((el) => el.classList.remove("hidden"));
+	document.querySelector("#home-navigation")?.classList.add("hidden");
+	document.querySelector("#home-navigation-counterpart")?.classList.add("hidden");
 
 
 	console.log('Authenticated user:', user);

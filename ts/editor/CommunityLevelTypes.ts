@@ -3,11 +3,10 @@ import type { LaserLevelData } from "../utils/LaserLogic";
 export type UserLevelRow = {
     id: string;
     owner_id: string;
-    title?: string | null;
-    name?: string | null;
-    level_data?: LaserLevelData | null;
-    data?: LaserLevelData | null;
-    published?: boolean | null;
+    title: string;
+    level_data: LaserLevelData;
+    published: boolean;
+    created_at?: string | null;
     updated_at?: string | null;
 };
 
@@ -44,8 +43,8 @@ export function createEmptyLevel(ownerId: string): UserLevelDraft {
 }
 
 export function normalizeUserLevel(row: UserLevelRow): UserLevelDraft {
-    const document = structuredClone(row.level_data ?? row.data ?? {});
-    const title = row.title ?? row.name ?? document.title ?? "Untitled Level";
+    const document = structuredClone(row.level_data);
+    const title = row.title;
     const grid = document.grid ?? {};
 
     document.title = title;

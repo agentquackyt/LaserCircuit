@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,10 +18,15 @@
         'opsz' 24
     }
   </style>
-<link rel="stylesheet" crossorigin href="./chunk-y0v3k2zq.css"><script type="module" crossorigin src="./chunk-cfxp10x3.js"></script></head>
+<link rel="stylesheet" crossorigin href="./chunk-3rcgdaax.css"><script type="module" crossorigin src="./chunk-6162nwym.js"></script></head>
 
 <body>
   <header>
+    <div class="home-navigation hidden" id="home-navigation">
+      <button class="btn-bold btn-basic btn-fill" id="btn-home" title="Main menu">
+        <span class="material-symbols-rounded">home</span>
+      </button>
+    </div>
     <div class="discord-account data-logged-in hidden">
       <img src="" alt="Discord" class="discord-picture hidden btn-bold btn-basic btn-fill" draggable="false" />
     </div>
@@ -33,6 +39,12 @@
         <span class="material-symbols-rounded">logout</span>
       </button>
     </div>
+    <div class="home-navigation hidden" id="home-navigation-counterpart">
+      <button class="btn-bold btn-basic btn-fill" style="opacity: 0; pointer-events: none;" disabled>
+        <span class="material-symbols-rounded">home</span>
+      </button>
+    </div>
+
   </header>
   <section id="title-screen" class="screen space">
     <div class="placeholder">

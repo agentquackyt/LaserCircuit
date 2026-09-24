@@ -21,7 +21,6 @@ export class EditorSuiteView extends View {
     private readonly validation: HTMLElement;
     private readonly board: EditorGameView;
     private saveTimer?: ReturnType<typeof setTimeout>;
-    private simulating = false;
     private activeColor: LightColor = "red";
     private orientationSelect?: HTMLSelectElement;
 
@@ -36,12 +35,29 @@ export class EditorSuiteView extends View {
         this.status.className = "community-editor-status";
         this.status.textContent = "Unsaved changes";
         header.appendChild(this.status);
-        const simulationButton = new ButtonBuilder().setText("Simulate [T]").setBold(ButtonFlavour.TERTIARY).setOnClick(() => {
-            this.simulating = this.board.toggleSimulation();
-            simulationButton.textContent = this.simulating ? "Stop [T]" : "Simulate [T]";
-        }).build();
-        header.appendChild(simulationButton);
+        const publishButton = new ButtonBuilder()
+            .setText(this.level.published ? "Unpublish" : "Publish")
+            .setBold(this.level.published ? ButtonFlavour.TERTIARY : ButtonFlavour.PRIMARY)
+            .setOnClick(() => {
+                this.level.published = !this.level.published;
+                publishButton.textContent = this.level.published ? "Unpublish" : "Publish";
+                publishButton.className = this.level.published ? "btn-bold btn-tertiary" : "btn-bold btn-primary";
+                this.queueSave();
+            })
+            .build();
+        header.appendChild(publishButton);
         header.appendChild(new ButtonBuilder().setText("Save").setBold(ButtonFlavour.PRIMARY).setOnClick(() => this.save()).build());
+            const uploadInput = document.createElement("input");
+            uploadInput.type = "file";
+            uploadInput.accept = ".json,application/json";
+            uploadInput.className = "hidden";
+            uploadInput.addEventListener("change", () => {
+                const file = uploadInput.files?.[0];
+                uploadInput.value = "";
+                if (file) void this.upload(file);
+            });
+            root.appendChild(uploadInput);
+            header.appendChild(new ButtonBuilder().setText("Upload").setBold(ButtonFlavour.SECONDARY).setOnClick(() => uploadInput.click()).build());
         header.appendChild(new ButtonBuilder().setText("Download").setBold(ButtonFlavour.SECONDARY).setOnClick(() => this.download()).build());
         header.appendChild(new ButtonBuilder().setText("Clear").setBold(ButtonFlavour.ERROR).setOnClick(() => {
             if (window.confirm("Clear all pieces, targets, and emitters?")) this.board.clear();
@@ -62,9 +78,6 @@ export class EditorSuiteView extends View {
             this.level = changedLevel;
             this.refreshValidation();
             this.queueSave();
-        });
-        this.board.addTrigger("simulation", (result?: { solved: boolean }) => {
-            this.status.textContent = result ? (result.solved ? "Solved" : "Simulation running") : "Simulation stopped";
         });
         workspace.appendChild(this.board.getElement());
         root.appendChild(workspace.build());
@@ -262,16 +275,47 @@ export class EditorSuiteView extends View {
         URL.revokeObjectURL(url);
     }
 
+    private async upload(file: File): Promise<void> {
+        try {
+            const parsed: unknown = JSON.parse(await file.text());
+            if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("The file must contain a level object.");
+
+            const imported = parsed as Record<string, unknown>;
+            const title = typeof imported.title === "string" && imported.title.trim()
+                ? imported.title
+                : this.level.title;
+            const grid = imported.grid && typeof imported.grid === "object"
+                ? imported.grid as { width?: unknown; height?: unknown }
+                : {};
+
+            this.level.title = title;
+            this.level.document = {
+                ...(imported as UserLevelDraft["document"]),
+                title,
+                grid: {
+                    width: typeof grid.width === "number" ? grid.width : 8,
+                    height: typeof grid.height === "number" ? grid.height : 8
+                },
+                emitters: Array.isArray(imported.emitters) ? imported.emitters as UserLevelDraft["document"]["emitters"] : [],
+                targets: Array.isArray(imported.targets) ? imported.targets as UserLevelDraft["document"]["targets"] : [],
+                pieces: Array.isArray(imported.pieces) ? imported.pieces as UserLevelDraft["document"]["pieces"] : [],
+                rules: imported.rules && typeof imported.rules === "object" ? imported.rules as UserLevelDraft["document"]["rules"] : {},
+                metadata: imported.metadata && typeof imported.metadata === "object" ? imported.metadata as Record<string, unknown> : {}
+            };
+            this.board.setLevel(this.level);
+            this.changed();
+        } catch (error) {
+            console.error("Error uploading level:", error);
+            this.status.textContent = "Upload failed";
+        }
+    }
+
     private handleShortcut(event: KeyboardEvent): void {
         const target = event.target as HTMLElement | null;
         if (target && ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)) return;
         if (event.ctrlKey && event.key.toLowerCase() === "s") {
             event.preventDefault();
             void this.save();
-            return;
-        }
-        if (event.key.toLowerCase() === "t") {
-            this.simulating = this.board.toggleSimulation();
             return;
         }
         const tool = TOOLS[Number(event.key) - 1];

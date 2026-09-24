@@ -8,11 +8,12 @@ export class DiscordRequiredView extends View {
             .addStyle({
                 justifyContent: "center",
                 alignItems: "center",
-                width: "500px",
+                maxWidth: "500px",
                 alignSelf: "center",
                 gap: ".5rem",
                 height: "100%",
-                margin: "auto"
+                margin: "auto",
+                padding: ".5rem"
             })
 
 
@@ -36,29 +37,35 @@ export class DiscordRequiredView extends View {
         message2.style.marginBottom = "1.5rem";
         view.appendChild(message2);
 
+        const redirectUrl = new URL(window.location.origin);
+        if (path) {
+            redirectUrl.searchParams.set('from', path);
+        }
+        console.log('Sending redirectTo:', redirectUrl.toString());
+
         const brandDiscordBtn = new ButtonBuilder()
-                .setClass("btn-discord", "large", "w-full")
-                .setBold() // adds .btn-bold without flavor, using --variant-background from .btn-discord
-                .setText("Continue with Discord")
-                .setOnClick(async () => {
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                        provider: 'discord',
-                        options: {
-                            redirectTo: window.location.origin+"?from="+ path, // Returns the user back to your SPA
-                            scopes: 'identify email',   // 'identify' is default; add more if needed
-                        },
-                    });
-                })
-                .build();
+            .setClass("btn-discord", "large", "w-full")
+            .setBold() // adds .btn-bold without flavor, using --variant-background from .btn-discord
+            .setText("Continue with Discord")
+            .setOnClick(async () => {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'discord',
+                    options: {
+                        redirectTo: redirectUrl.toString(), // Returns the user back to your SPA
+                        scopes: 'identify email',   // 'identify' is default; add more if needed
+                    },
+                });
+            })
+            .build();
 
         const backToHomeBtn = new ButtonBuilder()
-                .setClass("large", "w-full")
-                .setBold(ButtonFlavour.BASIC)
-                .setText("Back to Home")
-                .setOnClick(() => {
-                    window.location.href = "/";
-                })
-                .build();
+            .setClass("large", "w-full")
+            .setBold(ButtonFlavour.BASIC)
+            .setText("Back to Home")
+            .setOnClick(() => {
+                window.location.href = "/";
+            })
+            .build();
 
         view.appendChild(brandDiscordBtn);
         view.appendChild(backToHomeBtn);

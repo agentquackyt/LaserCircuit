@@ -19,7 +19,7 @@ export class EditorGameView extends View {
     private orientation: PieceOrientation = "/";
     private rotatable = true;
     private hoveredCell: HoveredCell = null;
-    private simulating = false;
+    private readonly simulating = true;
 
     constructor(level: UserLevelDraft) {
         const canvas = document.createElement("canvas");
@@ -30,7 +30,7 @@ export class EditorGameView extends View {
         this.canvas = canvas;
         this.level = level;
         this.renderer = new GridRendererSystem(canvas, level.document.grid?.width ?? 9, level.document.grid?.height ?? 9, 6, 6);
-        this.renderer.setSimulationEnabled(false);
+        this.renderer.setSimulationEnabled(true);
         this.renderer.setLevelData(level.document);
         canvas.addEventListener("mousemove", (event) => {
             this.hoveredCell = this.getCell(event);
@@ -65,13 +65,6 @@ export class EditorGameView extends View {
     setDirection(direction: Direction): void { this.direction = direction; }
     setOrientation(orientation: PieceOrientation): void { this.orientation = orientation; }
     setRotatable(rotatable: boolean): void { this.rotatable = rotatable; }
-
-    toggleSimulation(): boolean {
-        this.simulating = !this.simulating;
-        this.renderer.setSimulationEnabled(this.simulating);
-        this.invokeTrigger("simulation", this.simulating ? this.renderer.getSimulation() : undefined);
-        return this.simulating;
-    }
 
     clear(): void {
         this.level.document.emitters = [];
