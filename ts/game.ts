@@ -7,6 +7,8 @@ import { CommunityLevelEditor } from "./editor/CommunityLevelEditor";
 import { supabase } from "./database/supabase";
 import { DiscordRequiredView } from "./editor/views/DiscordRequiredView";
 import { TutorialManager } from "./systems/TutorialManager";
+import { Entity } from "./ecs/Entity";
+import { EventComponent } from "./systems/components";
 
 const engine = Engine.getInstance();
 const world = engine.world;
@@ -59,6 +61,7 @@ document.querySelectorAll<HTMLImageElement>(".discord-picture").forEach((image) 
 });
 
 function showMainMenu() {
+	clearCommunityLevelParam();
 	levelScreen?.classList.add("hidden");
 	editorScreen?.classList.add("hidden");
 	tutorialScreen?.classList.add("hidden");
@@ -66,6 +69,13 @@ function showMainMenu() {
 	document.querySelector("#game-screen")?.classList.add("hidden");
 	document.querySelector<HTMLDialogElement>("#completion-dialog")?.close();
 	titleScreen?.classList.remove("hidden");
+}
+
+function clearCommunityLevelParam() {
+	const url = new URL(window.location.href);
+	if (!url.searchParams.has("community")) return;
+	url.searchParams.delete("community");
+	window.history.replaceState({}, document.title, url.toString());
 }
 
 async function startGame() {
@@ -101,6 +111,28 @@ async function startDiscover() {
 
 	await levelSystem.loadPublishedCommunityLevels();
 	levelSystem.renderDiscoverScreen();
+}
+
+async function startCommunityLevel(levelId: string) {
+	levelSystem ??= new SupabaseLevelSystem();
+	if (!levelSystemRegistered) {
+		world.addEntitySystem(levelSystem);
+		levelSystemRegistered = true;
+	}
+	engine.start();
+
+	titleScreen?.classList.add("hidden");
+	levelScreen?.classList.add("hidden");
+	editorScreen?.classList.add("hidden");
+	tutorialScreen?.classList.add("hidden");
+	document.querySelector("#game-screen")?.classList.remove("hidden");
+
+	await levelSystem.loadPublishedCommunityLevels();
+	if (world) {
+		const entity = new Entity();
+		entity.addComponent(new EventComponent("ui:load-level", { levelId }));
+		world.addEntity(entity);
+	}
 }
 
 async function startEditor() {
@@ -176,18 +208,23 @@ async function checkAuth() {
 function checkParams() {
 	const urlParams = new URLSearchParams(window.location.search);
 	const fromParam = urlParams.get('from');
+	const communityLevelId = urlParams.get('community');
 	// strip the query params from the URL to avoid repeated actions on refresh
 
     const redirectUrl = new URL(window.location.toString());
 	console.log('Current URL:', redirectUrl.toString());
 
 	if (fromParam) {
-		const newUrl = window.location.origin + window.location.pathname;
-		window.history.replaceState({}, document.title, newUrl);
+		const newUrl = new URL(window.location.href);
+		newUrl.searchParams.delete("from");
+		window.history.replaceState({}, document.title, newUrl.toString());
 	}
 
 	if (fromParam === 'editor') {
 		startEditor();
+	}
+	if (communityLevelId) {
+		void startCommunityLevel(communityLevelId);
 	}
 }
 
