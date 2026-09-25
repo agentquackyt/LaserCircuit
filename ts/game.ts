@@ -143,7 +143,7 @@ async function startEditor() {
 	let isLoggedIn = await loginWithDiscord();
 	if (!isLoggedIn) return; // If not logged in, don't proceed
 	CommunityLevelEditor.getInstance().load();
-} 
+}
 
 supabase.auth.onAuthStateChange((event, session) => {
 	if (event === 'SIGNED_IN' && session) {
@@ -211,7 +211,7 @@ function checkParams() {
 	const communityLevelId = urlParams.get('community');
 	// strip the query params from the URL to avoid repeated actions on refresh
 
-    const redirectUrl = new URL(window.location.toString());
+	const redirectUrl = new URL(window.location.toString());
 	console.log('Current URL:', redirectUrl.toString());
 
 	if (fromParam) {
@@ -222,12 +222,16 @@ function checkParams() {
 
 	if (fromParam === 'editor') {
 		startEditor();
+		return;
 	}
 	if (communityLevelId) {
 		void startCommunityLevel(communityLevelId);
+		return;
 	}
+	if (urlParams.size > 0) return;
+	TutorialManager.getInstance().runTutorial();
+
 }
 
 checkAuth();
 checkParams();
-TutorialManager.getInstance().runTutorial();

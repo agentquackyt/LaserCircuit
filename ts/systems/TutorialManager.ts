@@ -46,6 +46,12 @@ class Tutorial {
     reset(): void {
         this._currentStepIndex = 0;
     }
+
+    setStepIndex(index: number): void {
+        if (index >= 0 && index < this._steps.length) {
+            this._currentStepIndex = index;
+        }
+    }
 }
 
 export class TutorialManager {
@@ -54,6 +60,7 @@ export class TutorialManager {
     private _targetScreen: HTMLElement | null = document.querySelector("#tutorial-screen");
     private _renderer: GridRendererSystem | null = null;
     private _stepView: HTMLElement | null = null;
+    private readonly progressStorageKey = "tutorialStep";
 
     private constructor() {
         document.querySelector("#btn-tutorial")?.addEventListener("click", () => this.runTutorial(true));
@@ -68,15 +75,31 @@ export class TutorialManager {
         return localStorage.getItem("tutorialCompleted") === "true";
     }
 
+    public checkForTutorialDisabled(): boolean {
+        return localStorage.getItem("noTutorial") === "true";
+    }
+
+    public markTutorialDisabled(): void {
+        localStorage.setItem("noTutorial", "true");
+    }
+
     public markTutorialCompleted(): void {
         localStorage.setItem("tutorialCompleted", "true");
     }
 
     public runTutorial(force = false): void {
-        if (!force && this.checkForTutorialCompletion()) return;
+        if (!force && (this.checkForTutorialCompletion() || this.checkForTutorialDisabled())) return;
         this._tutorial.reset();
+        this.loadTutorialProgress();
         this.showTutorialScreen();
         this.renderCurrentStep();
+    }
+
+    private loadTutorialProgress(): void {
+        const savedStep = Number.parseInt(localStorage.getItem(this.progressStorageKey) ?? "", 10);
+        if (Number.isInteger(savedStep)) {
+            this._tutorial.setStepIndex(savedStep);
+        }
     }
 
     private showTutorialScreen(): void {
@@ -148,7 +171,7 @@ export class TutorialManager {
             () => {
                 if (this._tutorial.stepIndex === this._tutorial.stepCount - 1) {
                     this.markTutorialCompleted();
-                    this.leaveTutorial();
+                    this.leaveTutorial(true);
                     return;
                 }
                 this._tutorial.nextStep();
@@ -196,7 +219,13 @@ export class TutorialManager {
             .build();
     }
 
-    private leaveTutorial(): void {
+    private leaveTutorial(completed = false): void {
+        if (completed) {
+            localStorage.removeItem(this.progressStorageKey);
+        } else {
+            localStorage.setItem(this.progressStorageKey, String(this._tutorial.stepIndex));
+        }
+        this.markTutorialDisabled();
         this._renderer?.dispose();
         this._renderer = null;
         this._stepView?.remove();

@@ -38,6 +38,13 @@ button:not(.btn-bold) {
     --variant-background: #dc3545;
 }
 
+.btn-bold:disabled {
+    --variant-color: #fff;
+    --variant-background: #999;
+
+    cursor: not-allowed;
+}
+
 input, select {
     --variant-color: black;
     --variant-background: white;
